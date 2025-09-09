@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Template</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./src/shared.css">
+
+    <!--meta---------------------------------------------------------------------------------------------------------- -->
+    <style>
+      body { margin: 0; background: black; font-family: sans-serif; }
+    </style>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-K8LPL4T9LY");
+    </script>
+
+    <script>
+      window.addEventListener("load", (event) => {
+        window.parent.postMessage(
+          JSON.stringify({
+            type: "GameLoaded",
+          }),
+          "*"
+        );
+      });
+    </script>
+
+</head>
+
+<body>
+
+    <div id="hideMe">
+      <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    </div>
+    
+    <div id="feedback">asdf</div>
+
+    <div id="fader"></div>
+    <div id="faderBlack"></div>
+    
+    <div id="splashBackground">
+      <img id="splashBgImage" src="src/images/splashBackground.png" alt="Splash Background">
+    </div>
+    
+    <!-- loading -->
+
+    <div id="loadingImage"></div>
+    <div id="loadingBack"></div>
+
+    <div id="topDiv"></div>
+    <div id="bonusDiv">
+      <!-- <div id="bonusText">BONUS</div>
+      <div id="bonusBar">
+        <div id="innerBar"></div>
+      </div>
+      <div id="bonusText2">x1</div> -->
+    </div>
+
+    <div id="scoreTimeContainer">
+      <div id="scoreDisplay">0</div>
+      <div id="scoreTimeDivider">|</div>
+      <div id="timeDisplay">2:00</div>
+    </div>
+
+    <div id="pelletDisplay">
+      <div id="pelletIcon"></div>
+      <div id="pelletCount">x0</div>
+    </div>
+
+    <div id="debugDisplay">Level: 1 | Spacing: 50px</div>
+
+    <div id="startMenu">
+      <div id="startMenuContainer">
+        <img id="splashImage" src="src/images/splashImage.png">
+        <div id="playButton">PLAY</div>
+        <div id="buttonGroup">
+          <div id="instructionsButton">INSTRUCTIONS</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="instructionsOverlay" style="display: none;">
+        <div id="instructionsContainer">
+            <div id="instructionsTitle">INSTRUCTIONS</div>
+            
+            <div id="instructionsText">
+                <div class="instructionLine">Tilt your phone or use A/D keys to move left and right.</div>
+                <div class="instructionDivider"></div>
+                <div class="instructionLine">Land on platforms to automatically jump higher!</div>
+            </div>
+            
+            <div id="closeInstructionsButton">CLOSE</div>
+        </div>
+    </div>
+
+    <!-- 2D Game Container -->
+    <div id="gameContainer" style="display: none;">
+        <div id="player"></div>
+        <div id="platforms"></div>
+    </div>
+
+</body>
+</html>
