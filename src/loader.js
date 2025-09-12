@@ -23,13 +23,13 @@ export class Loader{
 
         this.totalSkinsLoaded = 0;
 
-        console.log("set up loader")
+        //console.log("set up loader")
 
     }
 
     loadCubeTexture(loader){
         
-        console.log("CUBE TEXTURE");
+        //console.log("CUBE TEXTURE");
         this.isLoaded_CUBE=true;
     
     }
@@ -37,7 +37,7 @@ export class Loader{
     loadTexture(loader){
 
         loader.texturesLoaded+=1;
-        console.log("TEXTURE: "+this.texturesLoaded+" / "+this.textureArray.length)
+        //console.log("TEXTURE: "+this.texturesLoaded+" / "+this.textureArray.length)
 
         if(this.modelsLoaded===this.modelArray.length){
             this.isLoaded_3DTEXTURES=true;
@@ -48,7 +48,7 @@ export class Loader{
     managerLoad(obName){
     
         this.modelsLoaded+=1; 
-        console.log("MODEL: "+obName+" / "+this.modelsLoaded+" / "+this.modelArray.length)
+        //console.log("MODEL: "+obName+" / "+this.modelsLoaded+" / "+this.modelArray.length)
 
         if(this.modelsLoaded===this.modelArray.length){
             this.isLoaded_3D=true;
@@ -114,7 +114,7 @@ export class Loader{
         this.loader2.load('./src/models/'+this.myObject2+'.glb', 
             // Success callback
             (gltf) => {  
-                console.log("Character model loaded successfully:", gltf);
+                //console.log("Character model loaded successfully:", gltf);
                 
                 gltf.scene.traverse(function (object) {
                     object.castShadow = true;
@@ -128,22 +128,22 @@ export class Loader{
                 });
                 
                 gltf.animations.forEach((clip) => {
-                    console.log("Animation name:", clip.name);
+                    //console.log("Animation name:", clip.name);
                 });
                 
                 // Store the entire gltf object like temp3 does
                 e.char = gltf;
                 
-                console.log("Character gltf stored:", e.char);
-                console.log("Character animations:", gltf.animations);
+                //console.log("Character gltf stored:", e.char);
+                //console.log("Character animations:", gltf.animations);
             },
             // Progress callback
             (progress) => {
-                console.log("Character loading progress:", progress);
+                //console.log("Character loading progress:", progress);
             },
             // Error callback
             (error) => {
-                console.error("Error loading character model:", error);
+                //console.error("Error loading character model:", error);
             }
         );
 

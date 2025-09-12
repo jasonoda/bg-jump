@@ -30,7 +30,7 @@ export default class Builder {
         this.levelChallenges = {}; // Store assigned challenges for each level
         
         // Debug mode for testing challenges
-        this.debugChallengeMode = false; // Set to true to test challenges on level 2
+        this.debugChallengeMode = false; // Ensure debug mode is off
         this.debugChallenge = ['ran', 0.3, 1, 2]; // The challenge to test on level 2
     }
 
@@ -64,13 +64,13 @@ export default class Builder {
     }
 
     generatePlatforms() {
-        console.log('Generating all platforms...');
+        //console.log('Generating all platforms...');
         const platformsContainer = document.getElementById('platforms');
         platformsContainer.innerHTML = '';
 
         // Create starting platform below player (player starts at Y=100, so platform at Y=50)
         const startingPlatform = {
-            x: window.innerWidth / 2 - 30, // Center the platform
+            x: this.scene.getGameWidth() / 2 - 30, // Center the platform
             y: 50,
             width: 60,
             height: 15,
@@ -91,7 +91,7 @@ export default class Builder {
             // Assign challenge to this level at the start
             this.levelChallenges[level] = this.assignChallengeToLevel(level);
             if (this.levelChallenges[level]) {
-                console.log(`Level ${level} assigned challenge: ${this.levelChallenges[level]}`);
+                //console.log(`Level ${level} assigned challenge: ${this.levelChallenges[level]}`);
             }
             
             // Get spacing for this level
@@ -132,7 +132,7 @@ export default class Builder {
                 }
                 
                 const platform = {
-                    x: Math.random() * (window.innerWidth - 60),
+                    x: Math.random() * (this.scene.getGameWidth() - 60),
                     y: y + yVariation,
                     width: 60,
                     height: 15,
@@ -142,7 +142,7 @@ export default class Builder {
                     // Mover platform properties
                     velocityX: platformType === 'mover' ? (Math.random() < 0.5 ? 1 : -1) : 0, // Random initial direction
                     minX: 0,
-                    maxX: window.innerWidth - 60
+                    maxX: this.scene.getGameWidth() - 60
                 };
                 
                 // Check for overlaps and remove first overlapping platform if found
@@ -199,10 +199,10 @@ export default class Builder {
         // Set color based on platform type
         switch (platform.type) {
             case 'regular':
-                platformElement.style.background = '#4CAF50'; // Green
+                platformElement.style.background = '#2196F3'; // Blue (was Green)
                 break;
             case 'break':
-                platformElement.style.background = '#2196F3'; // Blue
+                platformElement.style.background = '#7e57c2'; // Purple (was Blue)
                 break;
             case 'mover':
                 platformElement.style.background = '#FFFFFF'; // White
@@ -243,7 +243,7 @@ export default class Builder {
                 if (removedPlatform.element) {
                     removedPlatform.element.remove();
                 }
-                console.log(`Removed platform too close vertically at Y=${removedPlatform.y}, new platform at Y=${newPlatform.y} (distance: ${yDistance})`);
+                //console.log(`Removed platform too close vertically at Y=${removedPlatform.y}, new platform at Y=${newPlatform.y} (distance: ${yDistance})`);
                 return true; // Platform too close found and handled
             }
         }
@@ -306,7 +306,7 @@ export default class Builder {
     }
 
     createBonusPellets() {
-        console.log('Creating bonus pellets...');
+        //console.log('Creating bonus pellets...');
         const platformsDiv = document.getElementById('platforms');
         
         // Create 3 pellets per level (30 levels total = 90 pellets)
@@ -321,7 +321,7 @@ export default class Builder {
                 // Try to place pellet without overlapping platforms or other pellets
                 do {
                     pellet = {
-                        x: Math.random() * (window.innerWidth - 10),
+                        x: Math.random() * (this.scene.getGameWidth() - 10),
                         y: levelY + Math.random() * levelHeight,
                         width: 10,
                         height: 10,
@@ -338,7 +338,7 @@ export default class Builder {
                 
                 // If we couldn't find a good spot after 50 attempts, place it anyway
                 if (attempts >= 50) {
-                    console.log(`Could not find good spot for pellet in level ${level}, placing anyway`);
+                    //console.log(`Could not find good spot for pellet in level ${level}, placing anyway`);
                 }
                 
                 this.scene.pellets.push(pellet);
@@ -346,7 +346,7 @@ export default class Builder {
             }
         }
         
-        console.log(`Created ${this.scene.pellets.length} bonus pellets`);
+        //console.log(`Created ${this.scene.pellets.length} bonus pellets`);
     }
 
     checkPelletOverlap(pellet) {
@@ -394,7 +394,7 @@ export default class Builder {
     }
 
     createSprings() {
-        console.log('Creating springs...');
+        //console.log('Creating springs...');
         
         // Create 1-3 springs per level (30 levels total)
         for (let level = 1; level <= 30; level++) {
@@ -413,14 +413,21 @@ export default class Builder {
             for (let i = 0; i < springCount; i++) {
                 if (levelPlatforms.length === 0) break; // No platforms to place spring on
                 
-                // Pick a random platform from this level
-                const randomPlatform = levelPlatforms[Math.floor(Math.random() * levelPlatforms.length)];
+                // Pick a random platform from this level that doesn't have a trap
+                let randomPlatform;
+                let attempts = 0;
+                do {
+                    randomPlatform = levelPlatforms[Math.floor(Math.random() * levelPlatforms.length)];
+                    attempts++;
+                } while (randomPlatform.trapWidened && attempts < 10); // Avoid platforms with traps
+                
+                if (attempts >= 10) break; // Skip if we can't find a platform without traps
                 
                 const spring = {
-                    x: randomPlatform.x + (randomPlatform.width - 15) / 2, // Center on platform
+                    x: randomPlatform.x + (randomPlatform.width - 24) / 2, // Center on platform
                     y: randomPlatform.y + randomPlatform.height, // On top of platform
-                    width: 15,
-                    height: 15,
+                    width: 24,
+                    height: 24,
                     visible: false,
                     element: null,
                     collected: false,
@@ -434,11 +441,11 @@ export default class Builder {
             }
         }
         
-        console.log(`Created ${this.scene.springs.length} springs`);
+        //console.log(`Created ${this.scene.springs.length} springs`);
     }
 
     createTrapBlocks() {
-        console.log('Creating trap blocks...');
+        //console.log('Creating trap blocks...');
         // For levels > 10
         for (let level = 11; level <= 30; level++) {
             const levelPlatforms = this.scene.platforms.filter(platform => 
@@ -480,20 +487,18 @@ export default class Builder {
                 this.createTrapElement(trap);
             }
         }
-        console.log(`Created ${this.scene.trapBlocks.length} trap blocks`);
+        //console.log(`Created ${this.scene.trapBlocks.length} trap blocks`);
     }
 
     createTrapElement(trap) {
-        const el = document.createElement('div');
+        const el = document.createElement('img');
         el.className = 'trap';
         el.style.position = 'absolute';
         el.style.left = trap.x + 'px';
         el.style.bottom = trap.y + 'px';
-        el.style.width = trap.width + 'px';
-        el.style.height = trap.height + 'px';
-        el.style.backgroundColor = '#cc0000'; // red square
-        el.style.border = '2px solid #990000';
-        el.style.borderRadius = '3px';
+        el.style.width = Math.max(18, trap.width) + 'px';
+        el.style.height = 'auto';
+        el.src = 'src/images/spike.svg';
         el.style.display = 'none';
         el.style.zIndex = '3';
         trap.element = el;
@@ -501,7 +506,7 @@ export default class Builder {
     }
 
     createBonuses() {
-        console.log('Creating bonuses...');
+        //console.log('Creating bonuses...');
         const bonusLevels = [4, 8, 12, 16];
         for (const level of bonusLevels) {
             const levelPlatforms = this.scene.platforms.filter(platform =>
@@ -526,7 +531,7 @@ export default class Builder {
             this.scene.bonuses.push(bonus);
             this.createBonusElement(bonus);
         }
-        console.log(`Created ${this.scene.bonuses.length} bonuses`);
+        //console.log(`Created ${this.scene.bonuses.length} bonuses`);
     }
 
     createBonusElement(bonus) {
@@ -535,22 +540,35 @@ export default class Builder {
         el.style.position = 'absolute';
         el.style.left = bonus.x + 'px';
         el.style.bottom = bonus.y + 'px';
-        el.style.width = bonus.width + 'px';
-        el.style.height = bonus.height + 'px';
-        el.style.borderRadius = '4px';
+        // Make icons twice as big and keep centered over platform
+        const newW = bonus.width * 2;
+        const newH = bonus.height * 2;
+        el.style.width = newW + 'px';
+        el.style.height = newH + 'px';
+        el.style.left = (bonus.x - (bonus.width / 2)) + 'px';
         el.style.display = 'none';
         el.style.zIndex = '3';
-        // Visuals per bonus type
+
+        // Use specific icon per bonus type
+        const img = document.createElement('img');
+        img.style.position = 'absolute';
+        img.style.left = '0';
+        img.style.top = '0';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        img.style.pointerEvents = 'none';
         if (bonus.type === 'shield') {
-            el.style.background = '#00C2FF';
-            el.style.boxShadow = '0 0 10px #00C2FF';
+            img.src = 'src/images/shieldIcon.png';
             el.title = 'Shield';
         } else {
-            el.style.background = '#00FF88';
-            el.style.boxShadow = '0 0 10px #00FF88';
+            img.src = 'src/images/shoeIcon.png';
             el.title = 'Spring Shoes';
         }
+        el.appendChild(img);
+
         bonus.element = el;
+        bonus.image = img;
         document.getElementById('platforms').appendChild(el);
     }
 
@@ -562,20 +580,29 @@ export default class Builder {
         springElement.style.bottom = spring.y + 'px';
         springElement.style.width = spring.width + 'px';
         springElement.style.height = spring.height + 'px';
-        // Make spring box grey
-        springElement.style.backgroundColor = '#777777';
-        springElement.style.border = '2px solid #555555';
-        springElement.style.borderRadius = '4px'; // Slightly larger border radius for bigger spring
-        springElement.style.display = 'none'; // Start hidden
+        springElement.style.display = 'none';
         springElement.style.zIndex = '3';
-        springElement.style.boxShadow = '0 0 6px rgba(0,0,0,0.5)';
-        
+
+        // Use an <img> for the spring graphic
+        const springImg = document.createElement('img');
+        springImg.style.position = 'absolute';
+        springImg.style.left = '0';
+        springImg.style.top = '0';
+        springImg.style.width = '100%';
+        springImg.style.height = '100%';
+        springImg.style.objectFit = 'contain';
+        springImg.style.pointerEvents = 'none';
+        // Default (not hit) graphic
+        springImg.src = 'src/images/springer1.svg';
+        springElement.appendChild(springImg);
+
         spring.element = springElement;
+        spring.image = springImg;
         document.getElementById('platforms').appendChild(springElement);
     }
 
     createDebugLines() {
-        console.log('Creating debug lines...');
+        //console.log('Creating debug lines...');
         const platformsDiv = document.getElementById('platforms');
         
         // Debug level lines and labels hidden
@@ -618,11 +645,11 @@ export default class Builder {
         }
         */
         
-        console.log(`Created ${this.scene.debugLines.length} debug lines`);
+        //console.log(`Created ${this.scene.debugLines.length} debug lines`);
     }
 
     createEnemies() {
-        console.log('Creating enemies...');
+        //console.log('Creating enemies...');
         
         // Create enemies for each level based on challenge data
         for (let level = 1; level <= 30; level++) {
@@ -648,10 +675,10 @@ export default class Builder {
                 do {
                     const isBlackHole = Math.random() < 0.25;
                     enemy = {
-                        x: Math.random() * (window.innerWidth - 100),
+                        x: Math.random() * (this.scene.getGameWidth() - 100),
                         y: levelY + Math.random() * levelHeight,
-                        width: 100,
-                        height: 100,
+                        width: 150,
+                        height: 150,
                         visible: false,
                         element: null,
                         destroyed: false,
@@ -663,7 +690,7 @@ export default class Builder {
                 
                 // If we couldn't find a good spot after 50 attempts, place it anyway
                 if (attempts >= 50) {
-                    console.log(`Could not find good spot for enemy in level ${level}, placing anyway`);
+                    //console.log(`Could not find good spot for enemy in level ${level}, placing anyway`);
                 }
                 
                 this.scene.enemies.push(enemy);
@@ -671,7 +698,7 @@ export default class Builder {
             }
         }
         
-        console.log(`Created ${this.scene.enemies.length} enemies`);
+        //console.log(`Created ${this.scene.enemies.length} enemies`);
     }
 
     checkEnemyOverlap(enemy) {
@@ -701,25 +728,138 @@ export default class Builder {
     }
 
     createEnemyElement(enemy) {
-        const enemyElement = document.createElement('div');
-        enemyElement.className = 'enemy';
-        enemyElement.style.position = 'absolute';
-        enemyElement.style.left = enemy.x + 'px';
-        enemyElement.style.bottom = enemy.y + 'px';
-        enemyElement.style.width = enemy.width + 'px';
-        enemyElement.style.height = enemy.height + 'px';
-        if (enemy.type === 'blackhole') {
-            enemyElement.style.backgroundColor = '#7D3CFF'; // Purple
-            enemyElement.style.boxShadow = '0 0 20px #7D3CFF';
-        } else {
-            enemyElement.style.backgroundColor = '#FF0000'; // Red color
-            enemyElement.style.boxShadow = '0 0 15px #FF0000';
-        }
-        enemyElement.style.borderRadius = '50%';
-        enemyElement.style.display = 'none'; // Start hidden
-        enemyElement.style.zIndex = '4';
+        // Create main enemy container
+        const enemyContainer = document.createElement('div');
+        enemyContainer.className = 'enemy-container';
+        enemyContainer.style.position = 'absolute';
+        enemyContainer.style.left = enemy.x + 'px';
+        enemyContainer.style.bottom = enemy.y + 'px';
+        enemyContainer.style.width = enemy.width + 'px';
+        enemyContainer.style.height = enemy.height + 'px';
+        enemyContainer.style.display = 'none'; // Start hidden
+        // Ensure black holes render behind platforms
+        enemyContainer.style.zIndex = (enemy.type === 'blackhole') ? '0' : '4';
         
-        enemy.element = enemyElement;
-        document.getElementById('platforms').appendChild(enemyElement);
+        // Create graphics div for the enemy image
+        const enemyGraphics = document.createElement('div');
+        enemyGraphics.className = 'enemy-graphics';
+        enemyGraphics.style.position = 'absolute';
+        enemyGraphics.style.width = '100%';
+        enemyGraphics.style.height = '100%';
+        // Use an <img> inside graphics container
+        const enemyImg = document.createElement('img');
+        enemyImg.style.position = 'absolute';
+        enemyImg.style.left = '0';
+        enemyImg.style.top = '0';
+        enemyImg.style.width = '100%';
+        enemyImg.style.height = '100%';
+        enemyImg.style.objectFit = 'contain';
+        enemyImg.style.pointerEvents = 'none';
+        if (enemy.type === 'blackhole') {
+            // Black hole uses static image
+            enemyImg.src = 'src/images/blackHole.png';
+            // Rotate the container, scale the image to avoid transform override
+            enemyGraphics.classList.add('blackhole-rot');
+            enemyImg.classList.add('blackhole-scale');
+        } else {
+            // Randomly choose monster set 1 or 2
+            const useSet2 = Math.random() < 0.5;
+            const ani = (useSet2 && this.e.animation.monster2Animation && this.e.animation.monster2Animation.length)
+                ? this.e.animation.monster2Animation
+                : this.e.animation.monsterAnimation;
+            enemyImg.src = ani && ani.length ? ani[0] : 'src/images/monster1/m_1.png';
+            enemy.ani = ani;
+        }
+        enemyGraphics.appendChild(enemyImg);
+        
+        // Create collision box (smaller than graphics)
+        const enemyCollisionBox = document.createElement('div');
+        enemyCollisionBox.className = 'enemy-collision-box';
+        enemyCollisionBox.style.position = 'absolute';
+        enemyCollisionBox.style.width = '60%'; // Smaller than graphics
+        enemyCollisionBox.style.height = '60%'; // Smaller than graphics
+        enemyCollisionBox.style.left = '20%'; // Center horizontally
+        enemyCollisionBox.style.top = '20%'; // Center vertically
+        enemyCollisionBox.style.backgroundColor = 'transparent';
+        enemyCollisionBox.style.border = 'none';
+        enemyCollisionBox.style.borderRadius = '50%';
+        enemyCollisionBox.style.pointerEvents = 'none'; // Don't interfere with mouse events
+        
+        // Add graphics and collision box to container
+        enemyContainer.appendChild(enemyGraphics);
+        enemyContainer.appendChild(enemyCollisionBox);
+        
+        // Store references for collision detection
+        enemy.element = enemyContainer;
+        enemy.graphics = enemyGraphics;
+        enemy.image = enemyImg;
+        enemy.collisionBox = enemyCollisionBox;
+        
+        // Store collision box dimensions and position for collision detection
+        enemy.collisionWidth = enemy.width * 0.6;
+        enemy.collisionHeight = enemy.height * 0.6;
+        enemy.collisionX = enemy.x + (enemy.width * 0.2);
+        enemy.collisionY = enemy.y + (enemy.height * 0.2);
+        
+        document.getElementById('platforms').appendChild(enemyContainer);
+
+        // Register image element for animation (src swapping) for regular enemies only
+        if (enemy.type !== 'blackhole') {
+            if (this.e && this.e.animation && this.e.animation.animatedSprites) {
+                this.e.animation.animatedSprites.push({
+                    img: enemyImg,
+                    ani: enemy.ani || this.e.animation.monsterAnimation,
+                    aniSpeed: 0.06,
+                    aniLoop: true
+                });
+            }
+        }
     }
+
+    createSampleEnemy() {
+        // Create a sample vortex at Y=2000 for testing
+        const sampleEnemy = {
+            x: 100,
+            y: 1000,
+            width: 150,
+            height: 150,
+            visible: false,
+            element: null,
+            destroyed: false,
+            level: 1,
+            type: 'blackhole'
+        };
+        
+        this.scene.enemies.push(sampleEnemy);
+        this.createEnemyElement(sampleEnemy);
+        
+        //console.log('Sample enemy created at 1000px for testing');
+    }
+
+    spawnSampleEnemyOnScreen() {
+        // Spawn an enemy exactly like others and let visibility logic handle showing
+        const width = 150;
+        const height = 150;
+        const screenX = Math.max(0, Math.min(window.innerWidth - width, Math.floor((window.innerWidth - width) / 2)));
+        const screenY = Math.floor(window.innerHeight * 0.4);
+        const worldY = this.scene.containerBottom + screenY;
+
+        const enemy = {
+            x: screenX,
+            y: worldY,
+            width: width,
+            height: height,
+            visible: false,
+            element: null,
+            destroyed: false,
+            level: this.scene.currentLevel || 1,
+            type: 'enemy'
+        };
+
+        this.scene.enemies.push(enemy);
+        this.createEnemyElement(enemy);
+        //console.log('Spawned on-screen sample enemy at', screenX, worldY);
+    }
+
+    // Removed large visual preview per request
 }

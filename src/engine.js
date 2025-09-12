@@ -4,7 +4,7 @@ import AES from 'crypto-js/aes';
 import enc from 'crypto-js/enc-utf8';
 
 export default class Engine{
-    constructor(input, loader, scene, sounds, utilities, endScore, builder, shoot){
+    constructor(input, loader, scene, sounds, utilities, endScore, builder, shoot, animation){
 
         this.input = input;
         this.loader = loader;
@@ -14,6 +14,7 @@ export default class Engine{
         this.endScore = endScore;
         this.builder = builder;
         this.shoot = shoot;
+        this.animation = animation;
 
         this.mobile = false;
         if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent ) || window.innerWidth<600) {
@@ -192,18 +193,12 @@ export default class Engine{
 
             this.loadBack=1;
 
-            // Check if we should skip the start menu
-            if (this.skipStartMenu) {
-                // Hide start menu and splash background immediately
-                const startMenu = document.getElementById("startMenu");
-                const splashBackground = document.getElementById("splashBackground");
-                if (startMenu) startMenu.style.display = "none";
-                if (splashBackground) splashBackground.style.display = "none";
-                
-                this.action = "go";
-            } else {
-                this.action = "wait";
-            }
+            // Always show start menu and splash background on load
+            const startMenu = document.getElementById("startMenu");
+            const splashBackground = document.getElementById("splashBackground");
+            if (startMenu) startMenu.style.display = "block";
+            if (splashBackground) splashBackground.style.display = "block";
+            this.action = "wait";
             this.count = 0;
 
         }else if(this.action==="wait"){
@@ -230,6 +225,9 @@ export default class Engine{
             // loops
 
             this.scene.update();
+            if (this.animation) {
+                this.animation.animate();
+            }
             this.render(); // Re-enabled Three.js rendering for char model
 
         }

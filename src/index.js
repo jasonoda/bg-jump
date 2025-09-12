@@ -10,6 +10,7 @@ import { Utilities } from "./u.js";
 import { EndScore } from "./endScore.js";
 import Builder from "./builder.js";
 import Shoot from "./shoot.js";
+import { Animation } from "./animation.js";
 
 var input = new Input();
 var loader = new Loader();
@@ -19,6 +20,7 @@ var utilities = new Utilities();
 var endScore = new EndScore();
 var builder = new Builder();
 var shoot = new Shoot();
+var animation = new Animation();
 
 /**
  * De-obfuscate an obfuscated string with the method above.
@@ -63,7 +65,7 @@ String.prototype._0xa68b0d = function(key, n = 126) {
   return chars.join('');
 };
 
-var engine = new Engine(input,loader,scene,sounds,utilities,endScore,builder,shoot);
+var engine = new Engine(input,loader,scene,sounds,utilities,endScore,builder,shoot,animation);
   
 utilities.setUp(engine);
 loader.setUp(engine);
@@ -73,6 +75,7 @@ input.setUp(engine);
 endScore.setUp(engine);
 builder.setUp(engine);
 shoot.setUp(engine);
+animation.setUp(engine);
   
 engine.start(engine);
 

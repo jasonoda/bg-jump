@@ -1,47 +1,87 @@
 {
   "index": {
-    "js": "index-bundle-6fd9f6104507dcb3c929.js"
+    "js": "index-bundle-74399f0165c9ade9b65d.js"
   },
   "": {
-    "js": "src_starScores_json-bundle-6fd9f6104507dcb3c929.js",
+    "glb": [
+      "src/models/char.glb",
+      "src/models/soccerBall.glb"
+    ],
+    "eps": [
+      "src/images/springer1.eps",
+      "src/images/springer2.eps"
+    ],
     "mp3": [
       "src/sounds/introMusic.mp3",
       "src/sounds/finish.mp3",
       "src/sounds/achievement1.mp3",
       "src/sounds/tick.mp3",
+      "src/sounds/death.mp3",
+      "src/sounds/fall.mp3",
+      "src/sounds/portal.mp3",
       "src/sounds/start.mp3",
       "src/sounds/cancelDrum.mp3",
       "src/sounds/firstMega.mp3",
       "src/sounds/loseStreak.mp3",
+      "src/sounds/bounce.mp3",
+      "src/sounds/spring.mp3",
       "src/sounds/match.mp3",
+      "src/sounds/enemyDie.mp3",
+      "src/sounds/break.mp3",
       "src/sounds/bonus1.mp3",
+      "src/sounds/coinBing.mp3",
+      "src/sounds/brightClick.mp3",
+      "src/sounds/getItem.mp3",
+      "src/sounds/shoot.mp3",
       "src/sounds/startBeep2.mp3",
       "src/sounds/startBeep1.mp3",
       "src/sounds/pickup.mp3",
       "src/sounds/place.mp3",
+      "src/sounds/jump.mp3",
       "src/sounds/click.mp3"
     ],
     "png": [
-      "src/images/splashBackground.png",
-      "src/images/splashImage.png",
+      "src/images/blackHole.png",
+      "src/images/shieldIcon.png",
       "src/images/ref/pos-x.png",
       "src/images/ref/pos-z.png",
       "src/images/ref/neg-z.png",
       "src/images/ref/neg-x.png",
       "src/images/ref/pos-y.png",
+      "src/images/shoeIcon.png",
+      "src/images/monster2/b_4.png",
+      "src/images/monster2/b_3.png",
+      "src/images/monster1/m_3.png",
+      "src/images/monster1/m_4.png",
+      "src/images/monster1/m_1.png",
+      "src/images/monster1/m_2.png",
+      "src/images/monster2/b_5.png",
+      "src/images/monster2/b_2.png",
+      "src/images/monster1/m_5.png",
+      "src/images/monster2/b_1.png",
+      "src/images/monster1/m_6.png",
+      "src/images/monster1/m_7.png",
+      "src/images/monster2/b_6.png",
       "src/images/fireball.png",
+      "src/images/splashBackground.png",
+      "src/images/splashImage.png",
       "src/images/ref/neg-y.png",
       "src/images/black.png"
-    ],
-    "glb": [
-      "src/models/char.glb",
-      "src/models/soccerBall.glb"
     ],
     "ttf": "661aebe2b21204b02d9e.ttf",
     "html": [
       "game.html",
       "index.html"
     ],
-    "css": "0cdaa9db970f65cedde5.css"
+    "css": "0cdaa9db970f65cedde5.css",
+    "js": "src_starScores_json-bundle-74399f0165c9ade9b65d.js",
+    "svg": [
+      "src/images/springer2.svg",
+      "src/images/springer1.svg",
+      "src/images/springIcon.svg",
+      "src/images/spike.svg",
+      "src/images/shieldicon.svg"
+    ],
+    "": "src/images/blackHole_tmp1477"
   }
 }

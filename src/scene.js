@@ -55,8 +55,10 @@ export class Scene {
         this.character = null;
         this.characterAnimMixer = null;
         this.jumpAction = null;
+
+        this.count=0;
         
-        console.log("3D scene initialized for char model");
+        //console.log("3D scene initialized for char model");
     }
 
     setupCharacter() {
@@ -86,63 +88,220 @@ export class Scene {
         
         // Find and setup jump animation
         if (this.e.char.animations && this.e.char.animations.length > 0) {
-            console.log("Available animations:", this.e.char.animations.map(anim => anim.name));
+            //console.log("Available animations:", this.e.char.animations.map(anim => anim.name));
             
             // Try to find jump animation first, then any animation
             this.jumpClip = THREE.AnimationClip.findByName(this.e.char.animations, "jump");
             if (!this.jumpClip) {
                 // If no jump animation, try to find any animation
                 this.jumpClip = this.e.char.animations[0];
-                console.log("Using first available animation:", this.jumpClip.name);
+                //console.log("Using first available animation:", this.jumpClip.name);
             }
             
             if (this.jumpClip) {
                 this.jumpAction = this.characterAnimMixer.clipAction(this.jumpClip);
                 this.jumpAction.name = this.jumpClip.name;
-                this.jumpAction.setLoop(THREE.LoopRepeat);
-                this.jumpAction.clampWhenFinished = false;
+                this.jumpAction.setLoop(THREE.LoopOnce, 0);
+                this.jumpAction.clampWhenFinished = true;
                 this.jumpAction.setEffectiveWeight(1.0);
                 this.jumpAction.timeScale = 0.7; // Make animation slower
                 this.jumpAction.play();
-                console.log("Animation started:", this.jumpClip.name);
+                //console.log("Animation started:", this.jumpClip.name);
                 
                 // Debug animation state
-                console.log("Animation mixer:", this.characterAnimMixer);
-                console.log("Animation action:", this.jumpAction);
-                console.log("Animation weight:", this.jumpAction.weight);
-                console.log("Animation enabled:", this.jumpAction.enabled);
+                //console.log("Animation mixer:", this.characterAnimMixer);
+                //console.log("Animation action:", this.jumpAction);
+                //console.log("Animation weight:", this.jumpAction.weight);
+                //console.log("Animation enabled:", this.jumpAction.enabled);
             } else {
-                console.warn("No animations found at all");
+                //console.warn("No animations found at all");
             }
         } else {
-            console.warn("No animations available in this.e.char.animations");
+            //console.warn("No animations available in this.e.char.animations");
         }
         
-        console.log("Character setup complete");
+        //console.log("Character setup complete");
     }
 
     restartJumpAnimation() {
         if (this.jumpAction && this.characterAnimMixer) {
             this.jumpAction.reset();
             this.jumpAction.play();
-            console.log("Jump animation restarted");
+            //console.log("Jump animation restarted");
         }
     }
 
     update() {
         if (this.action === "setup") {
+
             this.action = "load";
+
         } else if (this.action === "load") {
+
             this.action = "start";
+
         } else if (this.action === "start") {
-            // Check if character model is loaded and set it up
-            if (this.e.char && !this.character) {
-                this.setupCharacter();
+            // Show splash/start menu and wait for Play button
+            const startMenu = document.getElementById('startMenu');
+            if (startMenu) startMenu.style.display = 'block';
+
+            // Bind play button once
+            if (!this.startBound) {
+                this.startBound = true;
+                const playButton = document.getElementById('playButton');
+                if (playButton) {
+                    playButton.addEventListener('click', () => {
+                        // Fade out splash
+                        const splash = document.getElementById('splashBackground');
+                        if (splash) splash.style.opacity = '0';
+                        if (startMenu) startMenu.style.display = 'none';
+                        // Ensure character is set up
+                        if (this.e.char && !this.character) {
+                            this.setupCharacter();
+                        }
+                        // Start game
+                        this.init2DGame();
+                        this.action = 'game';
+                        // Attempt device permission (moved from EA)
+                        const permissionButton = document.getElementById('requestPermission');
+                        if (permissionButton) {
+                            permissionButton.click();
+                        } else {
+                            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                                DeviceOrientationEvent.requestPermission().catch(()=>{});
+                            }
+                            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                                DeviceMotionEvent.requestPermission().catch(()=>{});
+                            }
+                        }
+                    });
+                }
             }
-            this.init2DGame();
-            this.action = "game";
+            // Stay in start state until Play clicked
+            return;
+
         } else if (this.action === "game") {
+
             this.update2DGame();
+        // this.updateParticles();
+
+        } else if (this.action === 'enemy_hit') {
+
+            const playerEl = document.getElementById('player');
+            if (playerEl && !this.shakeStarted) {
+                this.shakeStarted = true;
+                // White screen flash using #fader
+                const fader = document.getElementById('fader');
+                if (fader) {
+                    fader.style.background = '#ffffff';
+                    fader.style.opacity = '0.5';
+                    fader.style.display = 'block';
+                    window.gsap.to(fader, {
+                        duration: 0.5,
+                        opacity: 0,
+                        ease: 'power2.out'
+                    });
+                }
+                if (window.gsap) {
+                    window.gsap.to(playerEl, {
+                        duration: 0.01,
+                        x: "+=6",
+                        repeat: 38,
+                        yoyo: true,
+                        ease: "power2.inOut"
+                    });
+                }
+            }
+
+            this.count+=this.e.dt;
+            if(this.count>.5){
+                this.count=0;
+                this.action='enemy_hit_wait'
+            }
+
+        } else if (this.action === 'enemy_hit_wait') {
+
+            // nothing
+
+            this.count+=this.e.dt;
+            if(this.count>1.25){
+                this.count=0;
+                this.action='death_fall'
+                if (this.e && this.e.s && this.e.s.p) this.e.s.p('fall');
+            }
+
+        } else if (this.action === 'death_fall') {
+            
+            this.player.y -= 14 * this.e.dt * this.gameSpeed;
+            this.updatePlayerPosition();
+
+            // Spin the 3D character model on Y axis during fall
+            if (this.character) {
+                this.character.rotation.y += this.e.dt * 4; // 3 radians per second
+            }
+
+            this.count+=this.e.dt;
+            if(this.count>3){
+                this.count=0;
+                console.log('dead');
+                this.action='dead'
+            }
+            
+         } else if (this.action === 'vortex_death') {
+             
+             const playerEl = document.getElementById('player');
+             if (playerEl && !this.vortexTweenStarted) {
+
+                 this.vortexTweenStarted = true;
+                 
+                 let vortexX = window.innerWidth / 2;
+                 let vortexY = window.innerHeight / 2;
+                 
+                 if (this.hitVortex && !this.hitVortex.destroyed) {
+                     vortexX = this.hitVortex.x + this.hitVortex.width / 2;
+                     vortexY = this.hitVortex.y + this.hitVortex.height / 2;
+                 }
+                 
+                 window.gsap.to(playerEl, {
+                     duration: 1.5,
+                     left: vortexX - this.player.width / 2,
+                     bottom: vortexY - this.player.height / 2,
+                     scale: 0.01,
+                     rotation: 360,
+                     ease: "power2.in"
+                 });
+
+             }
+
+             this.count+=this.e.dt;
+             if(this.count>1.5){
+                 this.count=0;
+                 console.log('dead');
+                 this.action='dead'
+             }
+            
+        } else if (this.action === 'dead') {
+
+            this.e.s.p("achievement1");
+          
+            // Compute final score and show end screen
+            const coinsCollected = this.pelletCount || 0;
+            const heightScore = Math.max(0, Math.floor(this.maxHeight));
+            const coinScore = coinsCollected * 25; // 25 points per coin
+            const finalScore = heightScore + coinScore;
+
+            // Build stats array: HEIGHT and COINS
+            const stats = [
+                ['HEIGHT', heightScore],
+                ['COINS', coinScore]
+            ];
+
+            if (this.e && this.e.endScore && this.e.endScore.createFinalScoreOverlay) {
+                this.e.endScore.createFinalScoreOverlay(finalScore, stats);
+            }
+
+            this.action="endScore"
+
         }
         
         // Update character animation
@@ -151,15 +310,15 @@ export class Scene {
             
             // Debug animation state every 60 frames
             if (Math.floor(this.e.gameTime * 60) % 60 === 0) {
-                console.log("Animation update - time:", this.e.gameTime, "dt:", this.e.dt);
+                //console.log("Animation update - time:", this.e.gameTime, "dt:", this.e.dt);
                 if (this.jumpAction) {
-                    console.log("Animation time:", this.jumpAction.time, "weight:", this.jumpAction.weight);
+                    //console.log("Animation time:", this.jumpAction.time, "weight:", this.jumpAction.weight);
                 }
             }
         }
         
-        // Update character rotation based on movement direction
-        if (this.character) {
+        // Update character rotation based on movement direction (only during active gameplay)
+        if (this.character && this.action === 'game') {
             // Determine target rotation based on velocity
             if (this.player.velocityX > 0.1) {
                 this.targetRotationY = Math.PI / 6; // 30 degrees right
@@ -187,6 +346,12 @@ export class Scene {
         
         // Add the Three.js canvas to the player element
         const playerElement = document.getElementById('player');
+        if (playerElement) {
+            // Ensure no glow/outline on player container
+            playerElement.style.outline = 'none';
+            playerElement.style.boxShadow = 'none';
+            playerElement.style.filter = 'none';
+        }
         if (playerElement && this.e.playerCanvas) {
             // Remove canvas from body if it's there
             if (this.e.playerCanvas.parentNode) {
@@ -194,14 +359,14 @@ export class Scene {
             }
             // Add to player element
             playerElement.appendChild(this.e.playerCanvas);
-            console.log("Canvas parented to player element");
+            //console.log("Canvas parented to player element");
         }
         
         // ===== GAME CONFIGURATION VARIABLES =====
         // Player physics
         this.player = {
-            x: window.innerWidth / 2 - 15,
-            y: 100, // 100px from bottom of container
+            x: this.getGameWidth() / 2 - 15,
+            y: 200, // start higher from bottom of container
             width: 30,
             height: 30,
             velocityX: 0,
@@ -233,6 +398,13 @@ export class Scene {
         this.lastShotTime = 0;
         this.shotCooldown = 100;
         
+        // Particle system
+        this.particles = [];
+        this.particlePool = [];
+        this.particlePoolSize = 50;
+        this.lastParticleTime = 0;
+        this.particleSpawnRate = 50; // milliseconds between particles
+        
         // Device orientation settings
         this.eventCount = 0;
         this.xMovementMultiplier = 18.0; // Multiplier for X movement
@@ -244,9 +416,14 @@ export class Scene {
         
         // Initialize ball system
         this.e.shoot.initBallPool();
+        
+        // Initialize particle system
+        this.initParticlePool();
 
         // Generate platforms
         this.e.builder.generatePlatforms();
+        
+        // Debug enemy removed
 
         // Set up controls
         this.setupControls();
@@ -254,15 +431,22 @@ export class Scene {
         // Set up shooting controls
         this.e.shoot.setupShootingControls();
         
-        // Create mobile debug display
-        if (this.e.mobile && !this.mobileDebugCreated) {
-            this.createMobileDebug();
-            this.mobileDebugCreated = true;
-        }
+        // Mobile debug display disabled
 
         // Position player element
         this.updatePlayerPosition();
         
+        // Debug start shield removed
+
+        // Mark game start time and reset end flag
+        this.startedAt = performance.now();
+        this.isEnding = false;
+
+    }
+
+    getGameWidth() {
+        const gc = document.getElementById('gameContainer');
+        return (gc && gc.clientWidth) ? gc.clientWidth : window.innerWidth;
     }
 
     setupControls() {
@@ -292,11 +476,11 @@ export class Scene {
 
         // Device orientation setup function - only request permission on user gesture
         this.setupDeviceOrientation = async () => {
-            console.log('Setting up device orientation listener...');
+            //console.log('Setting up device orientation listener...');
             
             // Don't remove existing listener if it's already working
             if (this.deviceOrientationHandler && this.deviceOrientationWorking) {
-                console.log('Device orientation already working, skipping setup');
+                //console.log('Device orientation already working, skipping setup');
                 return;
             }
             
@@ -313,45 +497,45 @@ export class Scene {
                 
                 // Check if permission API exists
                 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    console.log('Requesting device orientation permission...');
+                    //console.log('Requesting device orientation permission...');
                     orientationPermission = await DeviceOrientationEvent.requestPermission();
-                    console.log('Orientation permission result:', orientationPermission);
+                    //console.log('Orientation permission result:', orientationPermission);
                 } else {
-                    console.log('DeviceOrientationEvent.requestPermission not available (localhost?)');
+                    //console.log('DeviceOrientationEvent.requestPermission not available (localhost?)');
                 }
                 
                 // Check if permission API exists
                 if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                    console.log('Requesting device motion permission...');
+                    //console.log('Requesting device motion permission...');
                     motionPermission = await DeviceMotionEvent.requestPermission();
-                    console.log('Motion permission result:', motionPermission);
+                    //console.log('Motion permission result:', motionPermission);
                 } else {
-                    console.log('DeviceMotionEvent.requestPermission not available (localhost?)');
+                    //console.log('DeviceMotionEvent.requestPermission not available (localhost?)');
                 }
                 
                 // On localhost, permission APIs might not exist, so try anyway
                 if (orientationPermission !== 'granted' && motionPermission !== 'granted') {
-                    console.log('Both permissions denied or not available, trying anyway (localhost mode)');
+                    //console.log('Both permissions denied or not available, trying anyway (localhost mode)');
                     const orientationStatus = document.getElementById('orientationStatus');
                     if (orientationStatus) orientationStatus.textContent = 'Trying without permission (localhost)';
                 } else {
-                    console.log('At least one permission granted, proceeding...');
+                    //console.log('At least one permission granted, proceeding...');
                 }
             } catch (error) {
-                console.log('Permission request failed, trying anyway (localhost mode):', error);
+                //console.log('Permission request failed, trying anyway (localhost mode):', error);
                 const orientationStatus = document.getElementById('orientationStatus');
                 if (orientationStatus) orientationStatus.textContent = 'Trying without permission (localhost)';
             }
             
             this.deviceOrientationHandler = (e) => {
-                console.log('Device orientation/motion event received:', e.type, {
-                    gamma: e.gamma,
-                    alpha: e.alpha,
-                    beta: e.beta,
-                    accelerationX: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.x : 'null',
-                    accelerationY: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.y : 'null',
-                    accelerationZ: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.z : 'null'
-                });
+                //console.log('Device orientation/motion event received:', e.type, {
+                //     gamma: e.gamma,
+                //     alpha: e.alpha,
+                //     beta: e.beta,
+                //     accelerationX: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.x : 'null',
+                //     accelerationY: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.y : 'null',
+                //     accelerationZ: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.z : 'null'
+                // });
                 
                 // Mark device orientation as working (regardless of mobile detection)
                 this.deviceOrientationWorking = true;
@@ -369,10 +553,10 @@ export class Scene {
                 
                 if (e.gamma !== null && e.gamma !== undefined && !isNaN(e.gamma)) {
                     tiltValue = e.gamma;
-                    console.log('Using gamma:', tiltValue);
+                    //console.log('Using gamma:', tiltValue);
                 } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null) {
                     tiltValue = e.accelerationIncludingGravity.x;
-                    console.log('Using acceleration X:', tiltValue);
+                    //console.log('Using acceleration X:', tiltValue);
                 }
                 
                 if (tiltValue !== null) {
@@ -385,29 +569,29 @@ export class Scene {
                     // Only apply movement if above threshold, otherwise stop
                     this.player.velocityX = movementAmount;
                     
-                    console.log('Tilt processing:', {
-                        originalGamma: tiltValue,
-                        normalizedGamma: normalizedGamma,
-                        movementAmount: movementAmount,
-                        threshold: threshold,
-                        velocityX: this.player.velocityX
-                    });
+                    //console.log('Tilt processing:', {
+                    //     originalGamma: tiltValue,
+                    //     normalizedGamma: normalizedGamma,
+                    //     movementAmount: movementAmount,
+                    //     threshold: threshold,
+                    //     velocityX: this.player.velocityX
+                    // });
                 }
             };
             
             // Try both deviceorientation and devicemotion
             window.addEventListener('deviceorientation', this.deviceOrientationHandler);
             window.addEventListener('devicemotion', this.deviceOrientationHandler);
-            console.log('Device orientation and motion listeners added');
+            //console.log('Device orientation and motion listeners added');
             
             // Test if we can detect any events at all
             window.addEventListener('orientationchange', (e) => {
-                console.log('Orientation change event:', e);
+                //console.log('Orientation change event:', e);
             });
             
             // Test if we can detect any events at all
             window.addEventListener('resize', (e) => {
-                console.log('Resize event (test):', e);
+                //console.log('Resize event (test):', e);
             });
             
             // Update status immediately
@@ -427,10 +611,10 @@ export class Scene {
         // Only enable on user gesture - not automatically
         
         // Debug mobile detection
-        console.log('Mobile detection:', this.e.mobile);
-        console.log('User agent:', navigator.userAgent);
-        console.log('Device orientation available:', typeof DeviceOrientationEvent !== 'undefined');
-        console.log('Device motion available:', typeof DeviceMotionEvent !== 'undefined');
+        //console.log('Mobile detection:', this.e.mobile);
+        //console.log('User agent:', navigator.userAgent);
+        //console.log('Device orientation available:', typeof DeviceOrientationEvent !== 'undefined');
+        //console.log('Device motion available:', typeof DeviceMotionEvent !== 'undefined');
 
         // No touch controls - device orientation only
 
@@ -469,40 +653,26 @@ export class Scene {
         // Hide debug panel by default
         debugPanel.style.display = 'none';
         
-        console.log('Mobile debug panel created');
+        //console.log('Mobile debug panel created');
 
         // Add a floating Enable Accelerometer button (upper-left)
-        let accelBtn = document.getElementById('enableAccelerometerBtn');
-        if (!accelBtn) {
-            accelBtn = document.createElement('button');
-            accelBtn.id = 'enableAccelerometerBtn';
-            accelBtn.textContent = 'EA';
-            accelBtn.style.position = 'fixed';
-            accelBtn.style.top = '10px';
-            accelBtn.style.left = '10px';
-            accelBtn.style.zIndex = '6000';
-            accelBtn.style.padding = '6px 10px';
-            accelBtn.style.background = '#007AFF';
-            accelBtn.style.color = '#fff';
-            accelBtn.style.border = 'none';
-            accelBtn.style.borderRadius = '4px';
-            accelBtn.style.cursor = 'pointer';
-            document.body.appendChild(accelBtn);
+        // Hook EA functionality onto Play button
+        const playButton = document.getElementById('playButton');
+        if (playButton) {
+            playButton.addEventListener('click', () => {
+                const permissionButton = document.getElementById('requestPermission');
+                if (permissionButton) {
+                    permissionButton.click();
+                } else {
+                    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                        DeviceOrientationEvent.requestPermission().catch(()=>{});
+                    }
+                    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                        DeviceMotionEvent.requestPermission().catch(()=>{});
+                    }
+                }
+            });
         }
-        accelBtn.onclick = () => {
-            const permissionButton = document.getElementById('requestPermission');
-            if (permissionButton) {
-                permissionButton.click();
-            } else {
-                // Fallback: directly try to request permissions
-                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    DeviceOrientationEvent.requestPermission().catch(()=>{});
-                }
-                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                    DeviceMotionEvent.requestPermission().catch(()=>{});
-                }
-            }
-        };
         
         // Add screen push threshold adjustment buttons
         const decScreenPushButton = document.getElementById('decScreenPush');
@@ -513,7 +683,7 @@ export class Scene {
             decScreenPushButton.addEventListener('click', () => {
                 this.screenPushThreshold = Math.max(50, this.screenPushThreshold - 5);
                 if (screenPushValue) screenPushValue.textContent = this.screenPushThreshold;
-                console.log('Screen push threshold decreased to:', this.screenPushThreshold);
+                //console.log('Screen push threshold decreased to:', this.screenPushThreshold);
             });
         }
         
@@ -521,7 +691,7 @@ export class Scene {
             incScreenPushButton.addEventListener('click', () => {
                 this.screenPushThreshold = Math.min(500, this.screenPushThreshold + 5);
                 if (screenPushValue) screenPushValue.textContent = this.screenPushThreshold;
-                console.log('Screen push threshold increased to:', this.screenPushThreshold);
+                //console.log('Screen push threshold increased to:', this.screenPushThreshold);
             });
         }
         
@@ -534,7 +704,7 @@ export class Scene {
             decXMovement.addEventListener('click', () => {
                 this.xMovementMultiplier = Math.max(0.1, this.xMovementMultiplier - 0.1);
                 if (xMovementValue) xMovementValue.textContent = this.xMovementMultiplier.toFixed(1);
-                console.log('X Movement decreased to:', this.xMovementMultiplier);
+                //console.log('X Movement decreased to:', this.xMovementMultiplier);
             });
         }
         
@@ -542,7 +712,7 @@ export class Scene {
             incXMovement.addEventListener('click', () => {
                 this.xMovementMultiplier +=.1
                 if (xMovementValue) xMovementValue.textContent = this.xMovementMultiplier.toFixed(1);
-                console.log('X Movement increased to:', this.xMovementMultiplier);
+                //console.log('X Movement increased to:', this.xMovementMultiplier);
             });
         }
         
@@ -556,7 +726,7 @@ export class Scene {
             decGravity.addEventListener('click', () => {
                 this.player.gravity = Math.max(0.1, this.player.gravity - 0.1);
                 if (gravityValue) gravityValue.textContent = this.player.gravity.toFixed(1);
-                console.log('Gravity decreased to:', this.player.gravity);
+                //console.log('Gravity decreased to:', this.player.gravity);
             });
         }
         
@@ -564,7 +734,7 @@ export class Scene {
             incGravity.addEventListener('click', () => {
                 this.player.gravity = Math.min(2.0, this.player.gravity + 0.1);
                 if (gravityValue) gravityValue.textContent = this.player.gravity.toFixed(1);
-                console.log('Gravity increased to:', this.player.gravity);
+                //console.log('Gravity increased to:', this.player.gravity);
             });
         }
         
@@ -580,7 +750,7 @@ export class Scene {
                     toggleGravityButton.textContent = 'Enable Gravity';
                     toggleGravityButton.style.background = '#28a745';
                 }
-                console.log('Gravity toggled:', this.gravityEnabled ? 'ON' : 'OFF');
+                //console.log('Gravity toggled:', this.gravityEnabled ? 'ON' : 'OFF');
             });
         }
         
@@ -589,7 +759,7 @@ export class Scene {
         const clearDataInstructions = document.getElementById('clearDataInstructions');
         if (permissionButton) {
             permissionButton.addEventListener('click', async () => {
-                console.log('Permission button clicked');
+                //console.log('Permission button clicked');
                 permissionButton.textContent = 'Requesting...';
                 permissionButton.style.background = '#ffc107';
                 if (clearDataInstructions) clearDataInstructions.style.display = 'none';
@@ -599,7 +769,7 @@ export class Scene {
                     permissionButton.textContent = 'Permission Requested';
                     permissionButton.style.background = '#28a745';
                 } catch (error) {
-                    console.log('Permission request failed:', error);
+                    //console.log('Permission request failed:', error);
                     permissionButton.textContent = 'Failed';
                     permissionButton.style.background = '#dc3545';
                     if (clearDataInstructions) clearDataInstructions.style.display = 'block';
@@ -629,15 +799,15 @@ export class Scene {
         if (eventCount) eventCount.textContent = this.eventCount;
         
         // Log the actual values for debugging
-        console.log('Device orientation values:', {
-            gamma: e.gamma,
-            alpha: e.alpha,
-            beta: e.beta,
-            accelerationX: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.x : 'null',
-            accelerationY: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.y : 'null',
-            accelerationZ: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.z : 'null',
-            velocityX: this.player.velocityX
-        });
+        //console.log('Device orientation values:', {
+        //     gamma: e.gamma,
+        //     alpha: e.alpha,
+        //     beta: e.beta,
+        //     accelerationX: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.x : 'null',
+        //     accelerationY: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.y : 'null',
+        //     accelerationZ: e.accelerationIncludingGravity ? e.accelerationIncludingGravity.z : 'null',
+        //     velocityX: this.player.velocityX
+        // });
     }
 
 
@@ -650,6 +820,9 @@ export class Scene {
             // this.gameOver();
         }
 
+        // Update platform visibility BEFORE collisions so platforms exist for landing
+        this.updatePlatformVisibility();
+
         // Update player physics
         this.updatePlayerPhysics();
 
@@ -658,9 +831,6 @@ export class Scene {
 
         // Update container position based on player
         this.updateContainerPosition();
-
-        // Update platform visibility
-        this.updatePlatformVisibility();
 
         // Update mover platforms
         this.e.builder.updateMoverPlatforms();
@@ -690,9 +860,14 @@ export class Scene {
         // Check enemy collisions
         this.checkEnemyCollisions();
 
-        // Check if player fell off bottom of screen
-        if (!this.e.u.isObjectOnScreen(this.player, this.containerBottom)) {
-            this.gameOver();
+        const playerScreenPos = this.e.u.getScreenPosition(this.player, this.containerBottom);
+       
+        if (playerScreenPos.y < -20) {
+            
+            console.log('fell off bottom');
+            this.action = 'death_fall';
+            this.handleFallOffBottom();
+           
         }
     }
 
@@ -740,9 +915,9 @@ export class Scene {
         const buffer = 20; // Buffer pixels before wrapping
         
         if (this.player.x < -buffer) {
-            this.player.x = window.innerWidth - this.player.width + buffer;
+            this.player.x = this.getGameWidth() - this.player.width + buffer;
         }
-        if (this.player.x > window.innerWidth - this.player.width + buffer) {
+        if (this.player.x > this.getGameWidth() - this.player.width + buffer) {
             this.player.x = -buffer;
         }
     }
@@ -763,18 +938,20 @@ export class Scene {
                 this.player.y >= platform.y) { // Valid landing from above
                 
                 this.player.y = platform.y + platform.height;
+                if (this.e && this.e.s && this.e.s.p) this.e.s.p('jump');
                 this.player.velocityY = 0;
                 this.player.onGround = true;
                 
                 // Handle break platforms
                 if (platform.type === 'break') {
+                    if (this.e && this.e.s && this.e.s.p) this.e.s.p('break');
                     // Remove break platform from DOM and mark as broken
                     if (platform.element) {
                         platform.element.remove();
                     }
                     platform.broken = true;
                     platform.visible = false;
-                    console.log('Break platform broken!');
+                    //console.log('Break platform broken!');
                     // Also remove any trap attached to this platform
                     if (this.trapBlocks && this.trapBlocks.length) {
                         for (const trap of this.trapBlocks) {
@@ -803,6 +980,22 @@ export class Scene {
                 
                 // Restart jump animation
                 this.restartJumpAnimation();
+                
+                // Platform bounce animation
+                if (platform.element) {
+                    window.gsap.to(platform.element, {
+                        duration: 0.125,
+                        y: "+=8",
+                        ease: "power2.out",
+                        onComplete: () => {
+                            window.gsap.to(platform.element, {
+                                duration: 0.125,
+                                y: "-=8",
+                                ease: "power2.out"
+                            });
+                        }
+                    });
+                }
                
                 break;
             }
@@ -823,7 +1016,9 @@ export class Scene {
         }
         
         const gameContainer = document.getElementById('gameContainer');
-        gameContainer.style.transform = `translateY(${this.containerBottom}px)`;
+        // Preserve horizontal centering while moving vertically
+        gameContainer.style.left = '50%';
+        gameContainer.style.transform = `translate(-50%, ${this.containerBottom}px)`;
     }
 
     updatePlatformVisibility() {
@@ -831,7 +1026,7 @@ export class Scene {
         if (Math.floor(this.e.time * 60) % 60 === 0) {
             const screenTop = this.containerBottom;
             const screenBottom = this.containerBottom + window.innerHeight;
-            console.log(`Screen viewport: ${screenTop} to ${screenBottom}, Container: ${this.containerBottom}`);
+            //console.log(`Screen viewport: ${screenTop} to ${screenBottom}, Container: ${this.containerBottom}`);
         }
         
         for (const platform of this.platforms) {
@@ -936,8 +1131,9 @@ export class Scene {
                 
                 // Update score and pellet count
                 this.score += 10;
+                if (this.e && this.e.s && this.e.s.p) this.e.s.p('coinBing');
                 this.pelletCount++;
-                console.log(`Pellet collected! Score: ${this.score}, Pellets: ${this.pelletCount}`);
+                //console.log(`Pellet collected! Score: ${this.score}, Pellets: ${this.pelletCount}`);
             }
         }
     }
@@ -1003,14 +1199,19 @@ export class Scene {
                 
                 // Activate spring jump (1.5x normal jump power)
                 this.player.velocityY = this.player.jumpPower * 1.75;
+                if (this.e && this.e.s && this.e.s.p) this.e.s.p('spring');
                 this.player.onGround = false;
                 
                 // Restart jump animation
                 this.restartJumpAnimation();
                 
                 // Mark spring as used (but don't remove it, springs can be used multiple times)
-                console.log(`Spring activated! Jump power: ${this.player.jumpPower * 1.5}`);
+                //console.log(`Spring activated! Jump power: ${this.player.jumpPower * 1.5}`);
                 
+                // Swap spring graphic to hit state (persist in 2 state) and add bounce feedback
+                if (spring.image) {
+                    spring.image.src = 'src/images/springer2.svg';
+                }
                 // Add visual feedback - make spring bounce
                 spring.element.style.transform = 'scale(1.2)';
                 setTimeout(() => {
@@ -1032,7 +1233,14 @@ export class Scene {
                 this.player.y + this.player.height > trap.y) {
                 // Only lethal when falling (negative Y velocity), and not shielded
                 if (this.player.velocityY < 0 && !this.shieldActive) {
-                    this.gameOver();
+                    // Spike hit: enter enemy_hit state (reuse same death sequence)
+                    this.action = 'enemy_hit';
+                    this.count = 0;
+                    this.enemyHitTweenStarted = false;
+                    if (this.e && this.e.s && this.e.s.p) this.e.s.p('death');
+                    // Freeze player's current animation pose
+                    if (this.characterAnimMixer) this.characterAnimMixer.timeScale = 0;
+                    if (this.jumpAction) this.jumpAction.paused = true;
                     return;
                 }
             }
@@ -1050,6 +1258,7 @@ export class Scene {
                 // Collect bonus
                 bonus.visible = false;
                 bonus.collected = true;
+                if (this.e && this.e.s && this.e.s.p) this.e.s.p('getItem');
                 // Move far offscreen to ensure it never reappears
                 bonus.x = 100000;
                 bonus.y = 100000;
@@ -1071,19 +1280,64 @@ export class Scene {
         this.shieldActive = true;
         const DURATION_MS = 15000;
         clearTimeout(this._shieldTimeout);
+        const playerEl = document.getElementById('player');
+        // Create or update a radial-gradient shield overlay that fully wraps the player
+        if (playerEl) {
+            // Remove any existing outline/glow
+            playerEl.style.outline = '';
+            playerEl.style.boxShadow = '';
+            playerEl.style.filter = '';
+
+            // Ensure a container-relative context
+            if (getComputedStyle(playerEl).position === 'static') {
+                playerEl.style.position = 'relative';
+            }
+
+            // Reuse if exists
+            let shield = playerEl.querySelector('#playerShield');
+            if (!shield) {
+                shield = document.createElement('div');
+                shield.id = 'playerShield';
+                playerEl.appendChild(shield);
+            }
+
+            // Style the spherical shield (bigger, brighter, more 3D)
+            shield.style.position = 'absolute';
+            shield.style.left = '50%';
+            shield.style.top = 'calc(50% - 6px)';
+            // Slightly larger radius
+            shield.style.width = '195%';
+            shield.style.height = '195%';
+            shield.style.transform = 'translate(-50%, -50%)';
+            shield.style.borderRadius = '50%';
+            shield.style.pointerEvents = 'none';
+            shield.style.zIndex = '1002';
+            // Green, slightly transparent radial gradient for spherical look
+            shield.style.background = 'radial-gradient(circle at 60% 60%, rgba(60, 255, 140, 0) 0%, rgba(60, 255, 140, 0.35) 100%';
+            // shield.style.border = '1px solid rgba(40, 230, 110, 0.55)';
+            // Outer green glow + soft bloom + inner rim light
+            // shield.style.boxShadow = '0 0 16px rgba(60, 255, 140, 0.45), 0 0 40px rgba(40, 230, 110, 0.22), inset 0 0 12px rgba(255, 255, 255, 0.18)';
+        }
+
         this._shieldTimeout = setTimeout(() => {
             this.shieldActive = false;
-            const playerEl = document.getElementById('player');
-            if (playerEl) playerEl.style.boxShadow = '';
+            const playerEl2 = document.getElementById('player');
+            if (playerEl2) {
+                const shield2 = playerEl2.querySelector('#playerShield');
+                if (shield2 && shield2.parentNode) shield2.parentNode.removeChild(shield2);
+            }
         }, DURATION_MS);
-        const playerEl = document.getElementById('player');
-        if (playerEl) playerEl.style.boxShadow = '0 0 20px #00C2FF';
     }
 
     activateSpringShoes() {
         this.springJumpsLeft = 6;
         const playerEl = document.getElementById('player');
-        if (playerEl) playerEl.style.outline = '2px solid #00FF88';
+        // Disable green outline/glow
+        if (playerEl) {
+            playerEl.style.outline = '';
+            playerEl.style.boxShadow = '';
+            playerEl.style.filter = '';
+        }
         // Relocate nearby offscreen enemies/blackholes to a safe X position
         this.relocateNearbyOffscreenEnemies();
     }
@@ -1135,16 +1389,23 @@ export class Scene {
             // Skip destroyed or invisible enemies
             if (enemy.destroyed || !enemy.visible) continue;
             
-            // Check collision with player
-            if (this.player.x < enemy.x + enemy.width &&
-                this.player.x + this.player.width > enemy.x &&
-                this.player.y < enemy.y + enemy.height &&
-                this.player.y + this.player.height > enemy.y) {
+            // Update collision box position (in case enemy moved)
+            enemy.collisionX = enemy.x + (enemy.width * 0.2);
+            enemy.collisionY = enemy.y + (enemy.height * 0.2);
+            
+            // Check collision with player using collision box
+            if (this.player.x < enemy.collisionX + enemy.collisionWidth &&
+                this.player.x + this.player.width > enemy.collisionX &&
+                this.player.y < enemy.collisionY + enemy.collisionHeight &&
+                this.player.y + this.player.height > enemy.collisionY) {
                 // Vortex/black hole: always lethal, no bounce
                 if (enemy.type === 'blackhole') {
                     if (!this.shieldActive) {
-                        console.log('Player hit black hole - Game Over!');
-                        this.gameOver();
+                        //console.log('Player hit black hole - Game Over!');
+                        this.hitVortex = enemy; // Save the specific vortex that was hit
+                        this.action = 'vortex_death';
+                        this.vortexTweenStarted = false;
+                        if (this.e && this.e.s && this.e.s.p) this.e.s.p('portal');
                         return;
                     }
                 } else {
@@ -1153,6 +1414,7 @@ export class Scene {
                         this.player.y + this.player.height > enemy.y + enemy.height * 0.7) {
                         // Bounce up like a spring (1.5x normal jump power)
                         this.player.velocityY = this.player.jumpPower * 1.75;
+                        if (this.e && this.e.s && this.e.s.p) this.e.s.p('bounce');
                         this.player.onGround = false;
                         
                         // Restart jump animation
@@ -1164,12 +1426,17 @@ export class Scene {
                                 enemy.element.style.transform = 'scale(1.0)';
                             }
                         }, 100);
-                        console.log('Player bounced off enemy! Jump power:', this.player.jumpPower * 1.5);
+                        //console.log('Player bounced off enemy! Jump power:', this.player.jumpPower * 1.5);
             } else {
-                        // Game over for side or bottom collisions (unless shielded)
+                        // Enemy side/bottom hit: enter enemy_hit action (DT-driven, no timeouts)
                         if (!this.shieldActive) {
-                            console.log('Player hit enemy - Game Over!');
-                            this.gameOver();
+                            this.action = 'enemy_hit';
+                            this.count = 0;
+                            this.enemyHitTweenStarted = false;
+                            // Freeze player's current animation pose
+                            if (this.characterAnimMixer) this.characterAnimMixer.timeScale = 0;
+                            if (this.jumpAction) this.jumpAction.paused = true;
+                            if (this.e && this.e.s && this.e.s.p) this.e.s.p('death');
                             return;
                         }
                     }
@@ -1183,17 +1450,17 @@ export class Scene {
                     const ballCenterX = ball.x + ball.width / 2;
                     const ballCenterY = ball.y + ball.height / 2;
                     
-                    // Calculate enemy center position
-                    const enemyCenterX = enemy.x + enemy.width / 2;
-                    const enemyCenterY = enemy.y + enemy.height / 2;
+                    // Calculate enemy collision box center position
+                    const enemyCenterX = enemy.collisionX + enemy.collisionWidth / 2;
+                    const enemyCenterY = enemy.collisionY + enemy.collisionHeight / 2;
                     
                     // Calculate distance between centers
                     const dx = ballCenterX - enemyCenterX;
                     const dy = ballCenterY - enemyCenterY;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     
-                    // Check if ball is within enemy bounds (with some tolerance)
-                    const collisionDistance = (enemy.width / 2) + (ball.width / 2) + 10; // 10px tolerance
+                    // Check if ball is within enemy collision box bounds (with some tolerance)
+                    const collisionDistance = (enemy.collisionWidth / 2) + (ball.width / 2) + 10; // 10px tolerance
                     
                     if (distance < collisionDistance) {
                         if (enemy.type === 'blackhole') {
@@ -1205,7 +1472,8 @@ export class Scene {
                         enemy.destroyed = true;
                         enemy.visible = false;
                         enemy.element.style.display = 'none';
-                        console.log('Enemy destroyed by ball! Distance:', distance, 'Collision distance:', collisionDistance);
+                        if (this.e && this.e.s && this.e.s.p) this.e.s.p('enemyDie');
+                        //console.log('Enemy destroyed by ball! Distance:', distance, 'Collision distance:', collisionDistance);
                         
                         // Reset ball
                         ball.action = 'inactive';
@@ -1233,10 +1501,132 @@ export class Scene {
     }
 
     gameOver() {
-        console.log('Game Over!');
+        //console.log('Game Over!');
         // Reset the game
         this.init2DGame();
         // this.action = "game over"
+    }
+    
+    handleFallOffBottom(){
+        // Set animation to 0.5 seconds in and then freeze
+        if (this.jumpAction) {
+            this.jumpAction.time = 0.5;
+            this.jumpAction.paused = true;
+        }
+        if (this.characterAnimMixer) this.characterAnimMixer.timeScale = 0;
+       
+        const container = document.getElementById('gameContainer');
+        const endBottom = this.containerBottom - 1500;
+        
+        if (this.e && this.e.s && this.e.s.p) this.e.s.p('fall');
+        window.gsap.to(this, { duration: .7, containerBottom: endBottom, ease: 'sine.Out', onUpdate: () => {
+            // Preserve horizontal centering while moving vertically
+            container.style.left = '50%';
+            container.style.transform = `translate(-50%, ${this.containerBottom}px)`;
+        }, onComplete: () => {  } });
+        
+    }
+
+    //------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------
+
+    // Particle System
+    initParticlePool() {
+        for (let i = 0; i < this.particlePoolSize; i++) {
+            const particle = {
+                element: null,
+                x: 0,
+                y: 0,
+                size: 0,
+                opacity: 0,
+                velocityY: 0,
+                life: 0,
+                maxLife: 0,
+                active: false
+            };
+            this.particlePool.push(particle);
+        }
+    }
+
+    spawnParticle() {
+        // Find inactive particle from pool
+        let particle = this.particlePool.find(p => !p.active);
+        if (!particle) return; // Pool exhausted
+
+        // Create element if needed
+        if (!particle.element) {
+            particle.element = document.createElement('div');
+            particle.element.style.position = 'absolute';
+            particle.element.style.pointerEvents = 'none';
+            particle.element.style.zIndex = '50';
+            document.getElementById('gameContainer').appendChild(particle.element);
+        }
+
+        // Random position near player (wider spread)
+        const offsetX = (Math.random() - 0.5) * 30; // ±40px
+        const offsetY = (Math.random() - 0.5) * 28; // ±24px
+        
+        particle.x = this.player.x + this.player.width / 2 + offsetX;
+        particle.y = this.player.y + this.player.height / 2 + offsetY;
+        
+        // Random size (3-4px) a bit bigger and more pronounced
+        particle.size = Math.random() * 1 + 3;
+        
+        // Set initial properties
+        particle.opacity = 0.95; // stronger
+        particle.velocityY = 0; // no upward movement
+        particle.life = 0;
+        particle.maxLife = 600 + Math.random() * 300; // slightly quicker
+        particle.active = true;
+
+        // Update visual
+        particle.element.style.left = particle.x + 'px';
+        particle.element.style.bottom = particle.y + 'px';
+        particle.element.style.width = particle.size + 'px';
+        particle.element.style.height = particle.size + 'px';
+        particle.element.style.borderRadius = '50%';
+        particle.element.style.background = `radial-gradient(circle, rgba(255,255,255,${particle.opacity}) 0%, rgba(180,200,255,${particle.opacity * 0.5}) 60%, rgba(150,170,255,0.2) 85%, transparent 100%)`;
+        particle.element.style.display = 'block';
+    }
+
+    updateParticles() {
+        const currentTime = performance.now();
+        
+        // Spawn new particles
+        if (currentTime - this.lastParticleTime > this.particleSpawnRate) {
+            this.spawnParticle();
+            this.lastParticleTime = currentTime;
+        }
+
+        // Update existing particles
+        for (const particle of this.particlePool) {
+            if (!particle.active) continue;
+
+            particle.life += this.e.dt * 500; // Convert to milliseconds
+            // No vertical drift
+            // particle.y unchanged; no gravity
+
+            // Shrink and fade
+            const lifeRatio = particle.life / particle.maxLife;
+            const currentSize = particle.size * (1.1 - lifeRatio * 0.6); // Shrink to 40% of original
+            const currentOpacity = particle.opacity * (.5 - lifeRatio);
+
+            // Update visual
+            particle.element.style.left = particle.x + 'px';
+            particle.element.style.bottom = particle.y + 'px';
+            particle.element.style.width = currentSize + 'px';
+            particle.element.style.height = currentSize + 'px';
+            particle.element.style.background = `radial-gradient(circle, rgba(255,255,255,${currentOpacity}) 0%, rgba(180,200,255,${currentOpacity * 0.5}) 60%, rgba(150,170,255,0.2) 85%, transparent 100%)`;
+
+            // Remove when life is over
+            if (particle.life >= particle.maxLife) {
+                particle.active = false;
+                particle.element.style.display = 'none';
+            }
+        }
     }
 
     //------------------------------------------------------------------------------------------------

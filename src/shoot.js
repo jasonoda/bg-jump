@@ -87,7 +87,7 @@ export default class Shoot {
             ball.velocityY = 22; // Positive for upward movement
             
             // Calculate X velocity based on click position
-            const centerX = window.innerWidth / 2;
+            const centerX = (this.scene.getGameWidth ? this.scene.getGameWidth() : window.innerWidth) / 2;
             const velocityMultiplier = 8;
             ball.velocityX = (clickX - centerX) / centerX * velocityMultiplier;
             
@@ -97,6 +97,7 @@ export default class Shoot {
             // ball.element.style.transform = `rotate(${angle}deg)`;
             
             ball.action = 'shoot';
+            if (this.e && this.e.s && this.e.s.p) this.e.s.p('shoot');
             ball.element.style.display = 'block';
             this.scene.currentBallIndex = (this.scene.currentBallIndex + 1) % this.scene.ballPoolSize;
         }

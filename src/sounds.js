@@ -4,7 +4,7 @@ export class Sounds {
     setUp(e) {
 
         this.e=e;
-        this.soundArray = ["click", "finish", "match", "pickup", "place", "start", "tick", "cancelDrum", "bonus1", "firstMega", "loseStreak", "startBeep1", "startBeep2", "achievement1"];
+        this.soundArray = ["click","bounce","death","brightClick","break","coinBing","enemyDie","getItem","shoot","jump","bonus1","fall","portal","shoot","spring","achievement1"];
         this.loadedSounds = [];
 
         for(var i=0; i<this.soundArray.length; i++){
