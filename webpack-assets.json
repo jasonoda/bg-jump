@@ -1,6 +1,6 @@
 {
   "index": {
-    "js": "index-bundle-126d8041fa79ee02674f.js"
+    "js": "index-bundle-d6a69a30a7b8e0d0e710.js"
   },
   "": {
     "glb": [
@@ -13,6 +13,7 @@
     ],
     "png": [
       "src/images/blackHole.png",
+      "src/images/splashBackground.png",
       "src/images/shieldIcon.png",
       "src/images/ref/pos-x.png",
       "src/images/ref/pos-z.png",
@@ -34,7 +35,7 @@
       "src/images/monster1/m_7.png",
       "src/images/monster2/b_6.png",
       "src/images/fireball.png",
-      "src/images/splashBackground.png",
+      "src/images/splashBackground2.png",
       "src/images/splashImage.png",
       "src/images/ref/neg-y.png",
       "src/images/black.png"
@@ -80,7 +81,10 @@
       "src/images/spike.svg",
       "src/images/shieldicon.svg"
     ],
-    "css": "0cdaa9db970f65cedde5.css",
-    "js": "src_starScores_json-bundle-126d8041fa79ee02674f.js"
+    "css": [
+      "0cdaa9db970f65cedde5.css",
+      "edb23d6982e7f80d060d.css"
+    ],
+    "js": "src_starScores_json-bundle-d6a69a30a7b8e0d0e710.js"
   }
 }

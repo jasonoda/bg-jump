@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./src/shared.css">
+    <link rel="stylesheet" href="./src/main.css">
 
     <!--meta---------------------------------------------------------------------------------------------------------- -->
     <style>
@@ -43,7 +44,23 @@
 </head>
 
 <body>
-
+    <script>
+      window.addEventListener('DOMContentLoaded', function(){
+        var isIpad = (/iPad/.test(navigator.userAgent)) ||
+                     (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
+        if(isIpad){
+          var img = document.getElementById('splashBgImage');
+          if(img){
+            img.style.width = '100vw';
+            img.style.height = 'auto';
+            img.style.maxWidth = '100vw';
+            img.style.maxHeight = '100vh';
+            img.style.left = '50%';
+            img.style.transform = 'translateX(-50%)';
+          }
+        }
+      });
+    </script>
     <div id="hideMe">
       <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
     </div>

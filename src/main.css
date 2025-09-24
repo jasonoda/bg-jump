@@ -287,7 +287,7 @@ body{
     display: flex;
     align-items: center; /* vertical center */
     justify-content: center; /* horizontal center */
-    z-index: 10;
+    z-index: 210; /* Above blockers so it's visible and clickable */
 }
 
 #startMenuContainer {
@@ -301,6 +301,9 @@ body{
 }
 
 #splashBgImage{
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     height: 100vh;      /* fill full viewport height */
     width: auto;        /* derive width from height to keep aspect */
     max-height: 100vh;  /* don't exceed viewport height */
