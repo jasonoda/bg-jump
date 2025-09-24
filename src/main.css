@@ -461,3 +461,31 @@ body{
     pointer-events: none;
     display: none; /* hidden at start */
 }
+
+:root{ --play-area-width: 500px; }
+
+.side-blocker{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    background: #000000;
+    z-index: 442000; /* above gameplay UI */
+    pointer-events: none;
+}
+
+/* Left fills from left edge to start of center gap */
+#leftBlocker{
+    left: 0;
+    right: calc(50% + (var(--play-area-width) / 2));
+}
+
+/* Right fills from end of center gap to right edge */
+#rightBlocker{
+    left: calc(50% + (var(--play-area-width) / 2));
+    right: 0;
+}
+
+/* Hide blockers on mobile/tablet */
+@media (max-width: 768px){
+    #leftBlocker, #rightBlocker{ display: none; }
+}

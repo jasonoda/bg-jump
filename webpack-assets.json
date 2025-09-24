@@ -1,6 +1,6 @@
 {
   "index": {
-    "js": "index-bundle-74399f0165c9ade9b65d.js"
+    "js": "index-bundle-126d8041fa79ee02674f.js"
   },
   "": {
     "glb": [
@@ -10,6 +10,34 @@
     "eps": [
       "src/images/springer1.eps",
       "src/images/springer2.eps"
+    ],
+    "png": [
+      "src/images/blackHole.png",
+      "src/images/shieldIcon.png",
+      "src/images/ref/pos-x.png",
+      "src/images/ref/pos-z.png",
+      "src/images/ref/neg-z.png",
+      "src/images/ref/neg-x.png",
+      "src/images/ref/pos-y.png",
+      "src/images/shoeIcon.png",
+      "src/images/monster2/b_4.png",
+      "src/images/monster2/b_3.png",
+      "src/images/monster1/m_3.png",
+      "src/images/monster1/m_4.png",
+      "src/images/monster1/m_1.png",
+      "src/images/monster1/m_2.png",
+      "src/images/monster2/b_5.png",
+      "src/images/monster2/b_2.png",
+      "src/images/monster1/m_5.png",
+      "src/images/monster2/b_1.png",
+      "src/images/monster1/m_6.png",
+      "src/images/monster1/m_7.png",
+      "src/images/monster2/b_6.png",
+      "src/images/fireball.png",
+      "src/images/splashBackground.png",
+      "src/images/splashImage.png",
+      "src/images/ref/neg-y.png",
+      "src/images/black.png"
     ],
     "mp3": [
       "src/sounds/introMusic.mp3",
@@ -40,41 +68,11 @@
       "src/sounds/jump.mp3",
       "src/sounds/click.mp3"
     ],
-    "png": [
-      "src/images/blackHole.png",
-      "src/images/shieldIcon.png",
-      "src/images/ref/pos-x.png",
-      "src/images/ref/pos-z.png",
-      "src/images/ref/neg-z.png",
-      "src/images/ref/neg-x.png",
-      "src/images/ref/pos-y.png",
-      "src/images/shoeIcon.png",
-      "src/images/monster2/b_4.png",
-      "src/images/monster2/b_3.png",
-      "src/images/monster1/m_3.png",
-      "src/images/monster1/m_4.png",
-      "src/images/monster1/m_1.png",
-      "src/images/monster1/m_2.png",
-      "src/images/monster2/b_5.png",
-      "src/images/monster2/b_2.png",
-      "src/images/monster1/m_5.png",
-      "src/images/monster2/b_1.png",
-      "src/images/monster1/m_6.png",
-      "src/images/monster1/m_7.png",
-      "src/images/monster2/b_6.png",
-      "src/images/fireball.png",
-      "src/images/splashBackground.png",
-      "src/images/splashImage.png",
-      "src/images/ref/neg-y.png",
-      "src/images/black.png"
-    ],
     "ttf": "661aebe2b21204b02d9e.ttf",
     "html": [
       "game.html",
       "index.html"
     ],
-    "css": "0cdaa9db970f65cedde5.css",
-    "js": "src_starScores_json-bundle-74399f0165c9ade9b65d.js",
     "svg": [
       "src/images/springer2.svg",
       "src/images/springer1.svg",
@@ -82,6 +80,7 @@
       "src/images/spike.svg",
       "src/images/shieldicon.svg"
     ],
-    "": "src/images/blackHole_tmp1477"
+    "css": "0cdaa9db970f65cedde5.css",
+    "js": "src_starScores_json-bundle-126d8041fa79ee02674f.js"
   }
 }
