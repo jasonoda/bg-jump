@@ -86,10 +86,14 @@ export default class Shoot {
             ball.y = this.scene.player.y + this.scene.player.height;
             ball.velocityY = 22; // Positive for upward movement
             
-            // Calculate X velocity based on click position
-            const centerX = (this.scene.getGameWidth ? this.scene.getGameWidth() : window.innerWidth) / 2;
+            // Calculate X velocity based on click position relative to game container
+            const gameWidth = this.scene.getGameWidth ? this.scene.getGameWidth() : window.innerWidth;
+            const gameContainer = document.getElementById('gameContainer');
+            const containerRect = gameContainer ? gameContainer.getBoundingClientRect() : { left: 0, width: gameWidth };
+            const containerCenterX = containerRect.left + containerRect.width / 2;
+            const relativeClickX = clickX - containerCenterX;
             const velocityMultiplier = 8;
-            ball.velocityX = (clickX - centerX) / centerX * velocityMultiplier;
+            ball.velocityX = relativeClickX / (containerRect.width / 2) * velocityMultiplier;
             
             // Calculate and set initial rotation angle based on velocity direction
             // Add 90 degrees counter-clockwise to orient the fireball correctly

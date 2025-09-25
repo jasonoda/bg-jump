@@ -17,6 +17,7 @@ export default class Engine{
         this.animation = animation;
 
         this.mobile = false;
+        this.isAndroid = false;
         if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent ) || window.innerWidth<600) {
             this.mobile = true;
         }
@@ -25,6 +26,7 @@ export default class Engine{
 
         if(testUA.toLowerCase().indexOf("android") > -1){
             this.mobile = true;
+            this.isAndroid = true;
         }
 
         // Hide side blockers on tablets (UA-based detection, no measurements)
@@ -243,12 +245,13 @@ export default class Engine{
                 this.action="go"
             }
 
+
         }else if(this.action==="go"){
 
             // fade out loading cover
 
             this.loadBack-=this.dt;
-            if(this.loadBack.opacity<0){
+            if(this.loadBack.opacity<=0){
                 this.loadBack.opacity=0;
             }
             document.getElementById("loadingImage").style.opacity = this.loadBack+""
@@ -287,6 +290,33 @@ export default class Engine{
     
         this.renderer.setSize( width, height );
     
+    }
+
+    async requestDevicePermissions() {
+        try {
+            // Request orientation permission
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const orientationPermission = await DeviceOrientationEvent.requestPermission();
+                console.log('Orientation permission:', orientationPermission);
+            }
+            
+            // Request motion permission
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                const motionPermission = await DeviceMotionEvent.requestPermission();
+                console.log('Motion permission:', motionPermission);
+            }
+            
+            // Set up device orientation after permissions
+            if (this.scene && this.scene.setupDeviceOrientation) {
+                await this.scene.setupDeviceOrientation();
+            }
+        } catch (error) {
+            console.log('Permission request failed:', error);
+            // Try to set up anyway (might work on localhost)
+            if (this.scene && this.scene.setupDeviceOrientation) {
+                await this.scene.setupDeviceOrientation();
+            }
+        }
     }
 
 }

@@ -34,7 +34,7 @@ export class Input {
   
         } else if (event.key === "q" || event.key === "Q") {
 
-            this.e.scene.time=3;
+            this.e.scene.gameTime=3;
   
           }
   

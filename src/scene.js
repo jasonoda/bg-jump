@@ -149,6 +149,10 @@ export class Scene {
             if (!this.startBound) {
                 this.startBound = true;
                 const playButton = document.getElementById('playButton');
+                const instructionsButton = document.getElementById('instructionsButton');
+                const closeInstructionsButton = document.getElementById('closeInstructionsButton');
+                const instructionsOverlay = document.getElementById('instructionsOverlay');
+                
                 if (playButton) {
                     playButton.addEventListener('click', () => {
                         // Fade out splash
@@ -161,29 +165,194 @@ export class Scene {
                         }
                         // Start game
                         this.init2DGame();
-                        this.action = 'game';
-                        // Attempt device permission (moved from EA)
-                        const permissionButton = document.getElementById('requestPermission');
-                        if (permissionButton) {
-                            permissionButton.click();
-                        } else {
-                            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                                DeviceOrientationEvent.requestPermission().catch(()=>{});
-                            }
-                            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                                DeviceMotionEvent.requestPermission().catch(()=>{});
-                            }
-                        }
+                        this.action = 'countdown';
+                        this.countdownTime = 3;
+                        this.count = 0;
+                        // Request device permissions when game starts
+                        this.e.requestDevicePermissions();
                     });
+                }
+                
+                // Bind instructions button
+                if (instructionsButton && instructionsOverlay) {
+                    instructionsButton.addEventListener('click', () => {
+                        instructionsOverlay.style.display = 'flex';
+                    });
+                }
+                
+                // Bind close instructions button
+                if (closeInstructionsButton && instructionsOverlay) {
+                    closeInstructionsButton.addEventListener('click', () => {
+                        instructionsOverlay.style.display = 'none';
+                    });
+                }
+                
+                // Update movement instruction based on device type
+                const movementInstruction = document.getElementById('movementInstruction');
+                if (movementInstruction) {
+                    if (this.e.mobile) {
+                        movementInstruction.textContent = 'Tilt phone left or right to move';
+                    } else {
+                        movementInstruction.textContent = 'Use arrow keys to move left or right';
+                    }
                 }
             }
             // Stay in start state until Play clicked
             return;
 
+        } else if (this.action === "countdown") {
+            
+            // Create countdown display if it doesn't exist
+            if (!this.countdownDisplay) {
+                this.createCountdownDisplay();
+                // Freeze character animation during countdown
+                if (this.jumpAction && this.characterAnimMixer) {
+                    this.jumpAction.time = 0.5;
+                    this.jumpAction.paused = true;
+                    this.characterAnimMixer.timeScale = 0;
+                }
+            }
+            
+            // Update platform visibility during countdown so player can see them
+            this.updatePlatformVisibility();
+            
+            // Update player position during countdown
+            this.updatePlayerPosition();
+            
+            // Update countdown
+            this.count += this.e.dt;
+            if (this.count >= 1) {
+                this.count = 0;
+                this.countdownTime--;
+                
+                // Update countdown display
+                const countdownText = document.getElementById('countdownText');
+                if (countdownText) {
+                    if (this.countdownTime > 0) {
+                        countdownText.textContent = this.countdownTime;
+                        // Play beep for each number
+                        if (this.e && this.e.s && this.e.s.p) this.e.s.p('startBeep1');
+                    } else {
+                        countdownText.textContent = 'GO!';
+                        // Play different beep for GO!
+                        if (this.e && this.e.s && this.e.s.p) this.e.s.p('startBeep2');
+                    }
+                }
+                
+                // Start game when countdown reaches 0
+                if (this.countdownTime <= 0) {
+                    this.action = 'game';
+                    // Hide countdown display
+                    const countdownOverlay = document.getElementById('countdownOverlay');
+                    if (countdownOverlay) {
+                        countdownOverlay.style.display = 'none';
+                    }
+                }
+            }
+
         } else if (this.action === "game") {
+            
+            // Unfreeze character animation when game starts
+            if (this.jumpAction && this.characterAnimMixer && this.characterAnimMixer.timeScale === 0) {
+                this.jumpAction.paused = false;
+                this.characterAnimMixer.timeScale = 1;
+            }
 
             this.update2DGame();
         // this.updateParticles();
+
+        } else if (this.action === 'time_up_freeze') {
+
+            // Freeze player animation when game pauses
+            if (this.jumpAction && !this.animationFrozen) {
+                this.jumpAction.time = 0.5;
+                this.jumpAction.paused = true;
+                this.animationFrozen = true;
+            }
+            if (this.characterAnimMixer) this.characterAnimMixer.timeScale = 0;
+
+            // Game is frozen, wait for summit message
+            this.count += this.e.dt;
+            if (this.count > 0.5) {
+                this.count = 0;
+                this.action = 'summit_reached';
+                // Create and show "SUMMIT REACHED!" message
+                const summitMsg = document.createElement('div');
+                summitMsg.id = 'summitMessage';
+                summitMsg.innerHTML = 'SUMMIT REACHED!';
+                summitMsg.style.position = 'fixed';
+                summitMsg.style.top = '50%';
+                summitMsg.style.left = '50%';
+                summitMsg.style.transform = 'translate(-50%, -50%)';
+                summitMsg.style.fontSize = '48px';
+                summitMsg.style.fontWeight = 'bold';
+                summitMsg.style.color = 'white';
+                summitMsg.style.fontFamily = '"Montserrat", sans-serif';
+                summitMsg.style.textAlign = 'center';
+                summitMsg.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.8)';
+                summitMsg.style.zIndex = '20000';
+                summitMsg.style.opacity = '0';
+                document.body.appendChild(summitMsg);
+
+                this.e.s.p("shine");
+                
+                if (window.gsap) {
+                    window.gsap.to(summitMsg, {
+                        duration: 0.5,
+                        opacity: 1,
+                        scale: 1.2,
+                        ease: 'power2.out'
+                    });
+                }
+            }
+
+        } else if (this.action === 'summit_reached') {
+
+            // Show summit message for 2 seconds
+            this.count += this.e.dt;
+            if (this.count > 2) {
+                this.count = 0;
+                this.action = 'player_fly_off';
+                // Hide summit message
+                const summitMsg = document.getElementById('summitMessage');
+                if (summitMsg && window.gsap) {
+                    window.gsap.to(summitMsg, {
+                        duration: 0.5,
+                        opacity: 0,
+                        scale: 0.8,
+                        ease: 'power2.in',
+                        onComplete: () => {
+                            if (summitMsg.parentNode) {
+                                summitMsg.parentNode.removeChild(summitMsg);
+                            }
+                        }
+                    });
+                }
+            }
+
+        } else if (this.action === 'player_fly_off') {
+
+            this.e.s.p("whooshShot");
+
+            // Player flies off top of screen
+            const playerElement = document.getElementById('player');
+
+            window.gsap.to(playerElement, {
+                duration: 1,
+                y: '-=2000',
+                ease: 'sine.out'
+            });
+
+            this.action='showing fly off'
+
+        } else if (this.action === 'showing fly off') {
+
+            // Fallback if GSAP not available
+            this.count += this.e.dt;
+            if (this.count > 2) {
+                this.count = 0;
+                this.action = 'dead';
+            }
 
         } else if (this.action === 'enemy_hit') {
 
@@ -319,14 +488,10 @@ export class Scene {
         
         // Update character rotation based on movement direction (only during active gameplay)
         if (this.character && this.action === 'game') {
-            // Determine target rotation based on velocity
-            if (this.player.velocityX > 0.1) {
-                this.targetRotationY = Math.PI / 6; // 30 degrees right
-            } else if (this.player.velocityX < -0.1) {
-                this.targetRotationY = -Math.PI / 6; // 30 degrees left
-            } else {
-                this.targetRotationY = 0; // Face forward when not moving
-            }
+            // Calculate rotation proportional to velocity, capped at 30 degrees
+            const maxRotation = Math.PI / 6; // 30 degrees
+            const velocityFactor = Math.max(-1, Math.min(1, this.player.velocityX / 5.0)); // Normalize velocity to -1 to 1
+            this.targetRotationY = velocityFactor * maxRotation;
             
             // Smoothly interpolate rotation
             const rotationSpeed = 8.0; // Adjust for faster/slower rotation
@@ -370,7 +535,8 @@ export class Scene {
             width: 30,
             height: 30,
             velocityX: 0,
-            velocityY: 0,
+            velocityY: 0, // Start with no velocity
+            lastY: 200,
             onGround: false,
             jumpPower: 10.5, // Positive for upward jump
             gravity: 0.25,
@@ -410,6 +576,16 @@ export class Scene {
         this.xMovementMultiplier = 18.0; // Multiplier for X movement
         this.gravityEnabled = true; // Toggle for gravity
         this.screenPushThreshold = 325; // Screen push threshold in pixels
+        
+        // Simple damper for smooth controls
+        
+        // Debug mode - set to true to enable debug features
+        this.debugMode = false;
+        
+        // FPS counter
+        this.fps = 0;
+        this.frameCount = 0;
+        this.lastFpsTime = performance.now();
 
         // Initialize platforms array
         this.platforms = [];
@@ -431,7 +607,8 @@ export class Scene {
         // Set up shooting controls
         this.e.shoot.setupShootingControls();
         
-        // Mobile debug display disabled
+        // Mobile debug display enabled
+        // this.createMobileDebugDisplay();
 
         // Position player element
         this.updatePlayerPosition();
@@ -462,6 +639,11 @@ export class Scene {
             }
             if (e.code === 'ArrowRight' || e.code === 'KeyD') {
                 this.keys.right = true;
+            }
+            // Toggle debug mode with 'D' key
+            if (e.code === 'KeyD' && e.ctrlKey) {
+                this.debugMode = !this.debugMode;
+                console.log('Debug mode:', this.debugMode ? 'ON' : 'OFF');
             }
         });
 
@@ -548,34 +730,29 @@ export class Scene {
                 // Update debug display
                 this.updateMobileDebug(e);
                 
-                // Try both gamma (orientation) and acceleration (motion)
+                // Standard mobile tilt control implementation
                 let tiltValue = null;
                 
-                if (e.gamma !== null && e.gamma !== undefined && !isNaN(e.gamma)) {
-                    tiltValue = e.gamma;
-                    //console.log('Using gamma:', tiltValue);
-                } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null) {
+                // Use only accelerationIncludingGravity.x - the standard approach for mobile games
+                if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null) {
                     tiltValue = e.accelerationIncludingGravity.x;
-                    //console.log('Using acceleration X:', tiltValue);
+                    console.log('Using acceleration X:', tiltValue);
                 }
                 
                 if (tiltValue !== null) {
-                    // Normalize gamma to -1 to 1 range based on 90 degrees
-                    const normalizedGamma = Math.max(-1, Math.min(1, tiltValue / 90));
+                    // Normalize acceleration data from -9.8 to +9.8 to -1 to +1
+                    const normalizedTilt = Math.max(-1, Math.min(1, tiltValue / 9.8));
                     
-                    // Apply X movement multiplier to get the actual movement amount
-                    const movementAmount = normalizedGamma * this.xMovementMultiplier;
+                    // Apply X movement multiplier to get the target movement amount
+                    // Reverse direction for Android due to different coordinate system
+                    const tiltDirection = this.e.isAndroid ? -normalizedTilt : normalizedTilt;
+                    const targetVelocity = tiltDirection * this.xMovementMultiplier;
                     
-                    // Only apply movement if above threshold, otherwise stop
-                    this.player.velocityX = movementAmount;
-                    
-                    //console.log('Tilt processing:', {
-                    //     originalGamma: tiltValue,
-                    //     normalizedGamma: normalizedGamma,
-                    //     movementAmount: movementAmount,
-                    //     threshold: threshold,
-                    //     velocityX: this.player.velocityX
-                    // });
+                    // Only apply movement if device orientation is working AND we're on mobile
+                    if (this.deviceOrientationWorking && this.e.mobile) {
+                        this.player.velocityX = targetVelocity * 0.6;
+                        console.log('Applied velocity:', (targetVelocity * 0.15).toFixed(2), 'Tilt:', normalizedTilt.toFixed(2));
+                    }
                 }
             };
             
@@ -810,14 +987,146 @@ export class Scene {
         // });
     }
 
+    updateFPS() {
+        this.frameCount++;
+        const now = performance.now();
+        if (now - this.lastFpsTime >= 1000) {
+            this.fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsTime));
+            this.frameCount = 0;
+            this.lastFpsTime = now;
+            
+            // Update FPS display
+            const fpsDisplay = document.getElementById('fpsValue');
+            if (fpsDisplay) {
+                fpsDisplay.textContent = this.fps;
+            }
+        }
+    }
+
+    createMobileDebugDisplay() {
+        // Create debug overlay
+        const debugOverlay = document.createElement('div');
+        debugOverlay.id = 'mobileDebugOverlay';
+        debugOverlay.style.cssText = `
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 500000;
+            display: block;
+        `;
+        
+        debugOverlay.innerHTML = `
+            <div>FPS: <span id="fpsValue">0</span></div>
+            <div>Orientation: <span id="orientationStatus">Not Working</span></div>
+            <div>Gamma: <span id="gammaValue">0°</span></div>
+            <div>Alpha: <span id="alphaValue">0°</span></div>
+            <div>Beta: <span id="betaValue">0°</span></div>
+            <div>Accel X: <span id="accelXValue">0</span></div>
+            <div>Accel Y: <span id="accelYValue">0</span></div>
+            <div>Accel Z: <span id="accelZValue">0</span></div>
+            <div>Velocity X: <span id="velocityXValue">0</span></div>
+            <div>Player Y: <span id="playerYValue">0</span></div>
+        `;
+        
+        document.body.appendChild(debugOverlay);
+    }
+
+    updateMobileDebug(e) {
+        const orientationStatus = document.getElementById('orientationStatus');
+        const gammaValue = document.getElementById('gammaValue');
+        const alphaValue = document.getElementById('alphaValue');
+        const betaValue = document.getElementById('betaValue');
+        const accelXValue = document.getElementById('accelXValue');
+        const accelYValue = document.getElementById('accelYValue');
+        const accelZValue = document.getElementById('accelZValue');
+        const velocityXValue = document.getElementById('velocityXValue');
+        const playerYValue = document.getElementById('playerYValue');
+        
+        if (orientationStatus) orientationStatus.textContent = this.deviceOrientationWorking ? 'Working' : 'Not Working';
+        if (gammaValue) gammaValue.textContent = (e && e.gamma !== null && e.gamma !== undefined) ? e.gamma.toFixed(1) + '°' : 'null';
+        if (alphaValue) alphaValue.textContent = (e && e.alpha !== null && e.alpha !== undefined) ? e.alpha.toFixed(1) + '°' : 'null';
+        if (betaValue) betaValue.textContent = (e && e.beta !== null && e.beta !== undefined) ? e.beta.toFixed(1) + '°' : 'null';
+        if (accelXValue) accelXValue.textContent = (e && e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null) ? e.accelerationIncludingGravity.x.toFixed(2) : 'null';
+        if (accelYValue) accelYValue.textContent = (e && e.accelerationIncludingGravity && e.accelerationIncludingGravity.y !== null) ? e.accelerationIncludingGravity.y.toFixed(2) : 'null';
+        if (accelZValue) accelZValue.textContent = (e && e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) ? e.accelerationIncludingGravity.z.toFixed(2) : 'null';
+        if (velocityXValue) velocityXValue.textContent = this.player ? this.player.velocityX.toFixed(2) : '0.00';
+        if (playerYValue) playerYValue.textContent = this.player ? this.player.y.toFixed(0) : '0';
+    }
+
+    updateDebugDisplay() {
+        // Update debug display even when no orientation events
+        const velocityXValue = document.getElementById('velocityXValue');
+        const playerYValue = document.getElementById('playerYValue');
+        
+        if (velocityXValue) velocityXValue.textContent = this.player ? this.player.velocityX.toFixed(2) : '0.00';
+        if (playerYValue) playerYValue.textContent = this.player ? this.player.y.toFixed(0) : '0';
+    }
+
+    createCountdownDisplay() {
+        // Create countdown overlay
+        const countdownOverlay = document.createElement('div');
+        countdownOverlay.id = 'countdownOverlay';
+        countdownOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20000;
+            pointer-events: none;
+            background: transparent;
+        `;
+        
+        const countdownText = document.createElement('div');
+        countdownText.id = 'countdownText';
+        countdownText.textContent = '3';
+        countdownText.style.cssText = `
+            font-size: 90px;
+            font-weight: bold;
+            color: #87CEEB;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            user-select: none;
+            font-family: 'Olympus Mount', Arial, sans-serif;
+            line-height: 1;
+            margin: 0;
+            padding: 25px 0 0 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, calc(-50% - 25px));
+        `;
+        
+        countdownOverlay.appendChild(countdownText);
+        document.body.appendChild(countdownOverlay);
+        
+        // Mark as created
+        this.countdownDisplay = true;
+    }
 
 
     update2DGame() {
+        // Update FPS counter
+        this.updateFPS();
+        
+        // Update debug display
+        this.updateDebugDisplay();
+        
         // Update game time
         this.gameTime -= this.e.dt;
         if (this.gameTime <= 0) {
             this.gameTime = 0;
-            // this.gameOver();
+            this.action = 'time_up_freeze';
+            this.count = 0;
         }
 
         // Update platform visibility BEFORE collisions so platforms exist for landing
@@ -865,8 +1174,17 @@ export class Scene {
         if (playerScreenPos.y < -20) {
             
             console.log('fell off bottom');
-            this.action = 'death_fall';
-            this.handleFallOffBottom();
+            
+            if (this.debugMode) {
+                // Debug mode: Jump back up instead of dying
+                this.player.velocityY = this.player.jumpPower;
+                this.player.y = this.containerBottom + 100; // Reset position
+                console.log('Debug mode: Jumped back up');
+            } else {
+                // Normal mode: Die
+                this.action = 'death_fall';
+                this.handleFallOffBottom();
+            }
            
         }
     }
@@ -881,8 +1199,8 @@ export class Scene {
         }
 
         // Apply horizontal movement
-        // Use device orientation if available, otherwise use keyboard
-        if (typeof DeviceOrientationEvent !== 'undefined' && this.deviceOrientationWorking) {
+        // Use device orientation if available and working, otherwise use keyboard
+        if (typeof DeviceOrientationEvent !== 'undefined' && this.deviceOrientationWorking && this.e.mobile) {
             // Use device orientation velocity (proportional to tilt)
             // velocityX is already set by device orientation handler
         } else {
@@ -907,6 +1225,8 @@ export class Scene {
         }
 
         // Update position
+        // Track previous Y to prevent tunneling through thin platforms on low FPS
+        this.player.lastY = this.player.y;
         this.player.x += this.player.velocityX * this.e.dt * this.gameSpeed;
         this.player.y += this.player.velocityY * this.e.dt * this.gameSpeed;
 
@@ -929,13 +1249,45 @@ export class Scene {
         for (const platform of this.platforms) {
             if (!platform.visible || platform.broken) continue; // Skip invisible or broken platforms
             
-            if (this.player.x < platform.x + platform.width &&
+            // Enhanced collision detection for low FPS
+            const platformTop = platform.y + platform.height;
+            const playerBottom = this.player.y + this.player.height;
+            const playerBottomLast = this.player.lastY + this.player.height;
+            
+            // Check if player is falling and would intersect with platform
+            const isFalling = this.player.velocityY < 0;
+            const wouldIntersect = (
+                this.player.x < platform.x + platform.width &&
                 this.player.x + this.player.width > platform.x &&
-                this.player.y < platform.y + platform.height &&
-                this.player.y + this.player.height > platform.y &&
+                playerBottom >= platform.y &&
+                this.player.y <= platformTop
+            );
+            
+            // Enhanced swept collision for low FPS
+            const sweptCollision = (
+                isFalling &&
+                // Player was above platform last frame
+                playerBottomLast > platformTop &&
+                // Player is now at or below platform top
+                playerBottom <= platformTop &&
+                // X overlap during the sweep
+                this.player.x < platform.x + platform.width &&
+                this.player.x + this.player.width > platform.x
+            );
+            
+            // Additional check for low FPS: if player is very close to platform top
+            const nearPlatformTop = (
+                isFalling &&
+                playerBottom >= platformTop - 5 && // Within 5 pixels
+                playerBottom <= platformTop + 5 &&
+                this.player.x < platform.x + platform.width &&
+                this.player.x + this.player.width > platform.x
+            );
+
+            if ((wouldIntersect || sweptCollision || nearPlatformTop) &&
                 this.player.velocityY < 0 &&
-                // Require player's bottom to be at or above platform's bottom
-                this.player.y >= platform.y) { // Valid landing from above
+                // Require player's bottom to be at or above platform's bottom (landing from above)
+                this.player.y >= platform.y) {
                 
                 this.player.y = platform.y + platform.height;
                 if (this.e && this.e.s && this.e.s.p) this.e.s.p('jump');

@@ -4,7 +4,7 @@ export class Sounds {
     setUp(e) {
 
         this.e=e;
-        this.soundArray = ["click","bounce","death","brightClick","break","coinBing","enemyDie","getItem","shoot","jump","bonus1","fall","portal","shoot","spring","achievement1"];
+        this.soundArray = ["click", "shine", "whooshShot", "bounce","death","brightClick","break","coinBing","enemyDie","getItem","shoot","jump","bonus1","fall","portal","shoot","spring","achievement1","startBeep1","startBeep2"];
         this.loadedSounds = [];
 
         for(var i=0; i<this.soundArray.length; i++){

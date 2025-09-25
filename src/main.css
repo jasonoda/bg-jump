@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'Olympus Mount';
+    src: url('./fonts/Olympus Mount.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 /* Black hole animations */
 @keyframes bh-spin {
   from { transform: rotate(0deg); }
@@ -371,8 +378,13 @@ body{
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 1);
 }
 
-#topDiv, #bonusDiv {
-    background: linear-gradient(to bottom, #ff3333,#000000);
+#topDiv {
+    background: linear-gradient(to bottom, #333333,#000000);
+    /* opacity: 0; */
+}
+
+ #bonusDiv {
+    background: linear-gradient(to bottom, #333333,#000000);
     opacity: 0;
 }
 

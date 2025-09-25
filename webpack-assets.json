@@ -1,6 +1,6 @@
 {
   "index": {
-    "js": "index-bundle-d6a69a30a7b8e0d0e710.js"
+    "js": "index-bundle-23a7342e70862aba0f48.js"
   },
   "": {
     "glb": [
@@ -19,6 +19,7 @@
       "src/images/ref/pos-z.png",
       "src/images/ref/neg-z.png",
       "src/images/ref/neg-x.png",
+      "src/images/splashImage.png",
       "src/images/ref/pos-y.png",
       "src/images/shoeIcon.png",
       "src/images/monster2/b_4.png",
@@ -36,21 +37,23 @@
       "src/images/monster2/b_6.png",
       "src/images/fireball.png",
       "src/images/splashBackground2.png",
-      "src/images/splashImage.png",
       "src/images/ref/neg-y.png",
       "src/images/black.png"
     ],
+    "js": "src_starScores_json-bundle-23a7342e70862aba0f48.js",
     "mp3": [
       "src/sounds/introMusic.mp3",
       "src/sounds/finish.mp3",
       "src/sounds/achievement1.mp3",
       "src/sounds/tick.mp3",
+      "src/sounds/whooshShot.mp3",
       "src/sounds/death.mp3",
       "src/sounds/fall.mp3",
       "src/sounds/portal.mp3",
       "src/sounds/start.mp3",
       "src/sounds/cancelDrum.mp3",
       "src/sounds/firstMega.mp3",
+      "src/sounds/shine.mp3",
       "src/sounds/loseStreak.mp3",
       "src/sounds/bounce.mp3",
       "src/sounds/spring.mp3",
@@ -84,7 +87,6 @@
     "css": [
       "0cdaa9db970f65cedde5.css",
       "edb23d6982e7f80d060d.css"
-    ],
-    "js": "src_starScores_json-bundle-d6a69a30a7b8e0d0e710.js"
+    ]
   }
 }
