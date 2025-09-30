@@ -18,7 +18,7 @@ export default class Engine{
 
         this.mobile = false;
         this.isAndroid = false;
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent ) || window.innerWidth<600) {
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent )) {
             this.mobile = true;
         }
 

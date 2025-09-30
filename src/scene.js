@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 import Engine from './engine.js';
+import CryptoJS from 'crypto-js';
 
 export class Scene {
     constructor() {
@@ -12,6 +13,49 @@ export class Scene {
 
     setUp(engine) {
         this.e = engine;
+
+         /**
+        * Obfuscate a plaintext string with a simple rotation algorithm similar to
+        * the rot13 cipher.
+        * @param  {[type]} key rotation index between 0 and n
+        * @param  {Number} n   maximum char that will be affected by the algorithm
+        * @return {[type]}     obfuscated string
+        */
+         String.prototype._0x083c9db = function(key, n = 126) {
+        // return String itself if the given parameters are invalid
+        if (!(typeof(key) === 'number' && key % 1 === 0)
+            || !(typeof(key) === 'number' && key % 1 === 0)) {
+            return this.toString();
+        }
+
+        var chars = this.toString().split('');
+
+        for (var i = 0; i < chars.length; i++) {
+            var c = chars[i].charCodeAt(0);
+
+            if (c <= n) {
+            chars[i] = String.fromCharCode((chars[i].charCodeAt(0) + key) % n);
+            }
+        }
+
+        return chars.join('');
+        };
+
+        /**
+        * De-obfuscate an obfuscated string with the method above.
+        * @param  {[type]} key rotation index between 0 and n
+        * @param  {Number} n   same number that was used for obfuscation
+        * @return {[type]}     plaintext string
+        */
+        String.prototype._0xd7a82c = function(key, n = 126) {
+        // return String itself if the given parameters are invalid
+        if (!(typeof(key) === 'number' && key % 1 === 0)
+            || !(typeof(key) === 'number' && key % 1 === 0)) {
+            return this.toString();
+        }
+
+        return this.toString()._0x083c9db(n - key);
+        };
     }
 
     buildScene() {
@@ -57,8 +101,10 @@ export class Scene {
         this.jumpAction = null;
 
         this.count=0;
+
+        this.levelStartTime = performance.now();
         
-        //console.log("3D scene initialized for char model");
+        ////console.log("3D scene initialized for char model");
     }
 
     setupCharacter() {
@@ -88,14 +134,14 @@ export class Scene {
         
         // Find and setup jump animation
         if (this.e.char.animations && this.e.char.animations.length > 0) {
-            //console.log("Available animations:", this.e.char.animations.map(anim => anim.name));
+            ////console.log("Available animations:", this.e.char.animations.map(anim => anim.name));
             
             // Try to find jump animation first, then any animation
             this.jumpClip = THREE.AnimationClip.findByName(this.e.char.animations, "jump");
             if (!this.jumpClip) {
                 // If no jump animation, try to find any animation
                 this.jumpClip = this.e.char.animations[0];
-                //console.log("Using first available animation:", this.jumpClip.name);
+                ////console.log("Using first available animation:", this.jumpClip.name);
             }
             
             if (this.jumpClip) {
@@ -106,28 +152,28 @@ export class Scene {
                 this.jumpAction.setEffectiveWeight(1.0);
                 this.jumpAction.timeScale = 0.7; // Make animation slower
                 this.jumpAction.play();
-                //console.log("Animation started:", this.jumpClip.name);
+                ////console.log("Animation started:", this.jumpClip.name);
                 
                 // Debug animation state
-                //console.log("Animation mixer:", this.characterAnimMixer);
-                //console.log("Animation action:", this.jumpAction);
-                //console.log("Animation weight:", this.jumpAction.weight);
-                //console.log("Animation enabled:", this.jumpAction.enabled);
+                ////console.log("Animation mixer:", this.characterAnimMixer);
+                ////console.log("Animation action:", this.jumpAction);
+                ////console.log("Animation weight:", this.jumpAction.weight);
+                ////console.log("Animation enabled:", this.jumpAction.enabled);
             } else {
-                //console.warn("No animations found at all");
+                ////console.warn("No animations found at all");
             }
         } else {
-            //console.warn("No animations available in this.e.char.animations");
+            ////console.warn("No animations available in this.e.char.animations");
         }
         
-        //console.log("Character setup complete");
+        ////console.log("Character setup complete");
     }
 
     restartJumpAnimation() {
         if (this.jumpAction && this.characterAnimMixer) {
             this.jumpAction.reset();
             this.jumpAction.play();
-            //console.log("Jump animation restarted");
+            ////console.log("Jump animation restarted");
         }
     }
 
@@ -191,7 +237,7 @@ export class Scene {
                 const movementInstruction = document.getElementById('movementInstruction');
                 if (movementInstruction) {
                     if (this.e.mobile) {
-                        movementInstruction.textContent = 'Tilt phone left or right to move';
+                        movementInstruction.textContent = 'Tilt phone or use arrow keys to move';
                     } else {
                         movementInstruction.textContent = 'Use arrow keys to move left or right';
                     }
@@ -412,7 +458,7 @@ export class Scene {
             this.count+=this.e.dt;
             if(this.count>3){
                 this.count=0;
-                console.log('dead');
+                //console.log('dead');
                 this.action='dead'
             }
             
@@ -445,7 +491,7 @@ export class Scene {
              this.count+=this.e.dt;
              if(this.count>1.5){
                  this.count=0;
-                 console.log('dead');
+                 //console.log('dead');
                  this.action='dead'
              }
             
@@ -458,6 +504,12 @@ export class Scene {
             const heightScore = Math.max(0, Math.floor(this.maxHeight));
             const coinScore = coinsCollected * 25; // 25 points per coin
             const finalScore = heightScore + coinScore;
+            
+            // Set the final score before sending validate breadcrumb
+            this.score = finalScore;
+
+            // Call validate breadcrumb at end of game
+            this.breadCrumb("validate");
 
             // Build stats array: HEIGHT and COINS
             const stats = [
@@ -479,9 +531,9 @@ export class Scene {
             
             // Debug animation state every 60 frames
             if (Math.floor(this.e.gameTime * 60) % 60 === 0) {
-                //console.log("Animation update - time:", this.e.gameTime, "dt:", this.e.dt);
+                ////console.log("Animation update - time:", this.e.gameTime, "dt:", this.e.dt);
                 if (this.jumpAction) {
-                    //console.log("Animation time:", this.jumpAction.time, "weight:", this.jumpAction.weight);
+                    ////console.log("Animation time:", this.jumpAction.time, "weight:", this.jumpAction.weight);
                 }
             }
         }
@@ -524,7 +576,7 @@ export class Scene {
             }
             // Add to player element
             playerElement.appendChild(this.e.playerCanvas);
-            //console.log("Canvas parented to player element");
+            ////console.log("Canvas parented to player element");
         }
         
         // ===== GAME CONFIGURATION VARIABLES =====
@@ -540,7 +592,7 @@ export class Scene {
             onGround: false,
             jumpPower: 10.5, // Positive for upward jump
             gravity: 0.25,
-            friction: 0.95,
+            friction: 0.98,
             maxSpeed: 18
         };
         
@@ -619,6 +671,10 @@ export class Scene {
         this.startedAt = performance.now();
         this.isEnding = false;
 
+        // Initialize level tracking for breadcrumbs
+        this.previousLevel = 1;
+        this.levelStartTime = performance.now();
+
     }
 
     getGameWidth() {
@@ -633,7 +689,15 @@ export class Scene {
             right: false
         };
 
-        document.addEventListener('keydown', (e) => {
+        // Remove existing listeners to prevent duplicates
+        if (this.keydownHandler) {
+            document.removeEventListener('keydown', this.keydownHandler);
+        }
+        if (this.keyupHandler) {
+            document.removeEventListener('keyup', this.keyupHandler);
+        }
+
+        this.keydownHandler = (e) => {
             if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
                 this.keys.left = true;
             }
@@ -643,26 +707,29 @@ export class Scene {
             // Toggle debug mode with 'D' key
             if (e.code === 'KeyD' && e.ctrlKey) {
                 this.debugMode = !this.debugMode;
-                console.log('Debug mode:', this.debugMode ? 'ON' : 'OFF');
+                //console.log('Debug mode:', this.debugMode ? 'ON' : 'OFF');
             }
-        });
+        };
 
-        document.addEventListener('keyup', (e) => {
+        this.keyupHandler = (e) => {
             if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
                 this.keys.left = false;
             }
             if (e.code === 'ArrowRight' || e.code === 'KeyD') {
                 this.keys.right = false;
             }
-        });
+        };
+
+        document.addEventListener('keydown', this.keydownHandler);
+        document.addEventListener('keyup', this.keyupHandler);
 
         // Device orientation setup function - only request permission on user gesture
         this.setupDeviceOrientation = async () => {
-            //console.log('Setting up device orientation listener...');
+            ////console.log('Setting up device orientation listener...');
             
             // Don't remove existing listener if it's already working
             if (this.deviceOrientationHandler && this.deviceOrientationWorking) {
-                //console.log('Device orientation already working, skipping setup');
+                ////console.log('Device orientation already working, skipping setup');
                 return;
             }
             
@@ -679,38 +746,38 @@ export class Scene {
                 
                 // Check if permission API exists
                 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    //console.log('Requesting device orientation permission...');
+                    ////console.log('Requesting device orientation permission...');
                     orientationPermission = await DeviceOrientationEvent.requestPermission();
-                    //console.log('Orientation permission result:', orientationPermission);
+                    ////console.log('Orientation permission result:', orientationPermission);
                 } else {
-                    //console.log('DeviceOrientationEvent.requestPermission not available (localhost?)');
+                    ////console.log('DeviceOrientationEvent.requestPermission not available (localhost?)');
                 }
                 
                 // Check if permission API exists
                 if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                    //console.log('Requesting device motion permission...');
+                    ////console.log('Requesting device motion permission...');
                     motionPermission = await DeviceMotionEvent.requestPermission();
-                    //console.log('Motion permission result:', motionPermission);
+                    ////console.log('Motion permission result:', motionPermission);
                 } else {
-                    //console.log('DeviceMotionEvent.requestPermission not available (localhost?)');
+                    ////console.log('DeviceMotionEvent.requestPermission not available (localhost?)');
                 }
                 
                 // On localhost, permission APIs might not exist, so try anyway
                 if (orientationPermission !== 'granted' && motionPermission !== 'granted') {
-                    //console.log('Both permissions denied or not available, trying anyway (localhost mode)');
+                    ////console.log('Both permissions denied or not available, trying anyway (localhost mode)');
                     const orientationStatus = document.getElementById('orientationStatus');
                     if (orientationStatus) orientationStatus.textContent = 'Trying without permission (localhost)';
                 } else {
-                    //console.log('At least one permission granted, proceeding...');
+                    ////console.log('At least one permission granted, proceeding...');
                 }
             } catch (error) {
-                //console.log('Permission request failed, trying anyway (localhost mode):', error);
+                ////console.log('Permission request failed, trying anyway (localhost mode):', error);
                 const orientationStatus = document.getElementById('orientationStatus');
                 if (orientationStatus) orientationStatus.textContent = 'Trying without permission (localhost)';
             }
             
             this.deviceOrientationHandler = (e) => {
-                //console.log('Device orientation/motion event received:', e.type, {
+                ////console.log('Device orientation/motion event received:', e.type, {
                 //     gamma: e.gamma,
                 //     alpha: e.alpha,
                 //     beta: e.beta,
@@ -736,7 +803,7 @@ export class Scene {
                 // Use only accelerationIncludingGravity.x - the standard approach for mobile games
                 if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null) {
                     tiltValue = e.accelerationIncludingGravity.x;
-                    console.log('Using acceleration X:', tiltValue);
+                    //console.log('Using acceleration X:', tiltValue);
                 }
                 
                 if (tiltValue !== null) {
@@ -751,7 +818,6 @@ export class Scene {
                     // Only apply movement if device orientation is working AND we're on mobile
                     if (this.deviceOrientationWorking && this.e.mobile) {
                         this.player.velocityX = targetVelocity * 0.6;
-                        console.log('Applied velocity:', (targetVelocity * 0.15).toFixed(2), 'Tilt:', normalizedTilt.toFixed(2));
                     }
                 }
             };
@@ -759,16 +825,16 @@ export class Scene {
             // Try both deviceorientation and devicemotion
             window.addEventListener('deviceorientation', this.deviceOrientationHandler);
             window.addEventListener('devicemotion', this.deviceOrientationHandler);
-            //console.log('Device orientation and motion listeners added');
+            ////console.log('Device orientation and motion listeners added');
             
             // Test if we can detect any events at all
             window.addEventListener('orientationchange', (e) => {
-                //console.log('Orientation change event:', e);
+                ////console.log('Orientation change event:', e);
             });
             
             // Test if we can detect any events at all
             window.addEventListener('resize', (e) => {
-                //console.log('Resize event (test):', e);
+                ////console.log('Resize event (test):', e);
             });
             
             // Update status immediately
@@ -788,10 +854,10 @@ export class Scene {
         // Only enable on user gesture - not automatically
         
         // Debug mobile detection
-        //console.log('Mobile detection:', this.e.mobile);
-        //console.log('User agent:', navigator.userAgent);
-        //console.log('Device orientation available:', typeof DeviceOrientationEvent !== 'undefined');
-        //console.log('Device motion available:', typeof DeviceMotionEvent !== 'undefined');
+        ////console.log('Mobile detection:', this.e.mobile);
+        ////console.log('User agent:', navigator.userAgent);
+        ////console.log('Device orientation available:', typeof DeviceOrientationEvent !== 'undefined');
+        ////console.log('Device motion available:', typeof DeviceMotionEvent !== 'undefined');
 
         // No touch controls - device orientation only
 
@@ -830,7 +896,7 @@ export class Scene {
         // Hide debug panel by default
         debugPanel.style.display = 'none';
         
-        //console.log('Mobile debug panel created');
+        ////console.log('Mobile debug panel created');
 
         // Add a floating Enable Accelerometer button (upper-left)
         // Hook EA functionality onto Play button
@@ -860,7 +926,7 @@ export class Scene {
             decScreenPushButton.addEventListener('click', () => {
                 this.screenPushThreshold = Math.max(50, this.screenPushThreshold - 5);
                 if (screenPushValue) screenPushValue.textContent = this.screenPushThreshold;
-                //console.log('Screen push threshold decreased to:', this.screenPushThreshold);
+                ////console.log('Screen push threshold decreased to:', this.screenPushThreshold);
             });
         }
         
@@ -868,7 +934,7 @@ export class Scene {
             incScreenPushButton.addEventListener('click', () => {
                 this.screenPushThreshold = Math.min(500, this.screenPushThreshold + 5);
                 if (screenPushValue) screenPushValue.textContent = this.screenPushThreshold;
-                //console.log('Screen push threshold increased to:', this.screenPushThreshold);
+                ////console.log('Screen push threshold increased to:', this.screenPushThreshold);
             });
         }
         
@@ -881,7 +947,7 @@ export class Scene {
             decXMovement.addEventListener('click', () => {
                 this.xMovementMultiplier = Math.max(0.1, this.xMovementMultiplier - 0.1);
                 if (xMovementValue) xMovementValue.textContent = this.xMovementMultiplier.toFixed(1);
-                //console.log('X Movement decreased to:', this.xMovementMultiplier);
+                ////console.log('X Movement decreased to:', this.xMovementMultiplier);
             });
         }
         
@@ -889,7 +955,7 @@ export class Scene {
             incXMovement.addEventListener('click', () => {
                 this.xMovementMultiplier +=.1
                 if (xMovementValue) xMovementValue.textContent = this.xMovementMultiplier.toFixed(1);
-                //console.log('X Movement increased to:', this.xMovementMultiplier);
+                ////console.log('X Movement increased to:', this.xMovementMultiplier);
             });
         }
         
@@ -903,7 +969,7 @@ export class Scene {
             decGravity.addEventListener('click', () => {
                 this.player.gravity = Math.max(0.1, this.player.gravity - 0.1);
                 if (gravityValue) gravityValue.textContent = this.player.gravity.toFixed(1);
-                //console.log('Gravity decreased to:', this.player.gravity);
+                ////console.log('Gravity decreased to:', this.player.gravity);
             });
         }
         
@@ -911,7 +977,7 @@ export class Scene {
             incGravity.addEventListener('click', () => {
                 this.player.gravity = Math.min(2.0, this.player.gravity + 0.1);
                 if (gravityValue) gravityValue.textContent = this.player.gravity.toFixed(1);
-                //console.log('Gravity increased to:', this.player.gravity);
+                ////console.log('Gravity increased to:', this.player.gravity);
             });
         }
         
@@ -927,7 +993,7 @@ export class Scene {
                     toggleGravityButton.textContent = 'Enable Gravity';
                     toggleGravityButton.style.background = '#28a745';
                 }
-                //console.log('Gravity toggled:', this.gravityEnabled ? 'ON' : 'OFF');
+                ////console.log('Gravity toggled:', this.gravityEnabled ? 'ON' : 'OFF');
             });
         }
         
@@ -936,7 +1002,7 @@ export class Scene {
         const clearDataInstructions = document.getElementById('clearDataInstructions');
         if (permissionButton) {
             permissionButton.addEventListener('click', async () => {
-                //console.log('Permission button clicked');
+                ////console.log('Permission button clicked');
                 permissionButton.textContent = 'Requesting...';
                 permissionButton.style.background = '#ffc107';
                 if (clearDataInstructions) clearDataInstructions.style.display = 'none';
@@ -946,7 +1012,7 @@ export class Scene {
                     permissionButton.textContent = 'Permission Requested';
                     permissionButton.style.background = '#28a745';
                 } catch (error) {
-                    //console.log('Permission request failed:', error);
+                    ////console.log('Permission request failed:', error);
                     permissionButton.textContent = 'Failed';
                     permissionButton.style.background = '#dc3545';
                     if (clearDataInstructions) clearDataInstructions.style.display = 'block';
@@ -976,7 +1042,7 @@ export class Scene {
         if (eventCount) eventCount.textContent = this.eventCount;
         
         // Log the actual values for debugging
-        //console.log('Device orientation values:', {
+        ////console.log('Device orientation values:', {
         //     gamma: e.gamma,
         //     alpha: e.alpha,
         //     beta: e.beta,
@@ -1173,13 +1239,13 @@ export class Scene {
        
         if (playerScreenPos.y < -20) {
             
-            console.log('fell off bottom');
+            //console.log('fell off bottom');
             
             if (this.debugMode) {
                 // Debug mode: Jump back up instead of dying
                 this.player.velocityY = this.player.jumpPower;
                 this.player.y = this.containerBottom + 100; // Reset position
-                console.log('Debug mode: Jumped back up');
+                //console.log('Debug mode: Jumped back up');
             } else {
                 // Normal mode: Die
                 this.action = 'death_fall';
@@ -1199,18 +1265,18 @@ export class Scene {
         }
 
         // Apply horizontal movement
-        // Use device orientation if available and working, otherwise use keyboard
+        // Always check for keyboard controls first (works on both mobile and desktop)
+        if (this.keys.left) {
+            this.player.velocityX -= this.keyboardSpeedXMult * this.e.dt * this.gameSpeed;
+        }
+        if (this.keys.right) {
+            this.player.velocityX += this.keyboardSpeedXMult * this.e.dt * this.gameSpeed;
+        }
+        
+        // Also use device orientation if available and working on mobile
         if (typeof DeviceOrientationEvent !== 'undefined' && this.deviceOrientationWorking && this.e.mobile) {
             // Use device orientation velocity (proportional to tilt)
             // velocityX is already set by device orientation handler
-        } else {
-            // Use keyboard controls for desktop
-            if (this.keys.left) {
-                this.player.velocityX -= this.keyboardSpeedXMult * this.e.dt * this.gameSpeed;
-            }
-            if (this.keys.right) {
-                this.player.velocityX += this.keyboardSpeedXMult * this.e.dt * this.gameSpeed;
-            }
         }
 
         // Apply friction
@@ -1303,7 +1369,7 @@ export class Scene {
                     }
                     platform.broken = true;
                     platform.visible = false;
-                    //console.log('Break platform broken!');
+                    ////console.log('Break platform broken!');
                     // Also remove any trap attached to this platform
                     if (this.trapBlocks && this.trapBlocks.length) {
                         for (const trap of this.trapBlocks) {
@@ -1378,7 +1444,7 @@ export class Scene {
         if (Math.floor(this.e.time * 60) % 60 === 0) {
             const screenTop = this.containerBottom;
             const screenBottom = this.containerBottom + window.innerHeight;
-            //console.log(`Screen viewport: ${screenTop} to ${screenBottom}, Container: ${this.containerBottom}`);
+            ////console.log(`Screen viewport: ${screenTop} to ${screenBottom}, Container: ${this.containerBottom}`);
         }
         
         for (const platform of this.platforms) {
@@ -1485,7 +1551,7 @@ export class Scene {
                 this.score += 10;
                 if (this.e && this.e.s && this.e.s.p) this.e.s.p('coinBing');
                 this.pelletCount++;
-                //console.log(`Pellet collected! Score: ${this.score}, Pellets: ${this.pelletCount}`);
+                ////console.log(`Pellet collected! Score: ${this.score}, Pellets: ${this.pelletCount}`);
             }
         }
     }
@@ -1558,7 +1624,7 @@ export class Scene {
                 this.restartJumpAnimation();
                 
                 // Mark spring as used (but don't remove it, springs can be used multiple times)
-                //console.log(`Spring activated! Jump power: ${this.player.jumpPower * 1.5}`);
+                ////console.log(`Spring activated! Jump power: ${this.player.jumpPower * 1.5}`);
                 
                 // Swap spring graphic to hit state (persist in 2 state) and add bounce feedback
                 if (spring.image) {
@@ -1753,7 +1819,7 @@ export class Scene {
                 // Vortex/black hole: always lethal, no bounce
                 if (enemy.type === 'blackhole') {
                     if (!this.shieldActive) {
-                        //console.log('Player hit black hole - Game Over!');
+                        ////console.log('Player hit black hole - Game Over!');
                         this.hitVortex = enemy; // Save the specific vortex that was hit
                         this.action = 'vortex_death';
                         this.vortexTweenStarted = false;
@@ -1778,7 +1844,7 @@ export class Scene {
                                 enemy.element.style.transform = 'scale(1.0)';
                             }
                         }, 100);
-                        //console.log('Player bounced off enemy! Jump power:', this.player.jumpPower * 1.5);
+                        ////console.log('Player bounced off enemy! Jump power:', this.player.jumpPower * 1.5);
             } else {
                         // Enemy side/bottom hit: enter enemy_hit action (DT-driven, no timeouts)
                         if (!this.shieldActive) {
@@ -1825,7 +1891,7 @@ export class Scene {
                         enemy.visible = false;
                         enemy.element.style.display = 'none';
                         if (this.e && this.e.s && this.e.s.p) this.e.s.p('enemyDie');
-                        //console.log('Enemy destroyed by ball! Distance:', distance, 'Collision distance:', collisionDistance);
+                        ////console.log('Enemy destroyed by ball! Distance:', distance, 'Collision distance:', collisionDistance);
                         
                         // Reset ball
                         ball.action = 'inactive';
@@ -1850,10 +1916,20 @@ export class Scene {
     updateLevel() {
         // Calculate level based on current player height, not max height
         this.currentLevel = Math.min(Math.floor(this.player.y / 2000) + 1, this.maxLevel);
+        
+        // Check if player reached a new level
+        if (this.currentLevel > this.previousLevel) {
+            // Send breadcrumb for completed level
+            this.breadCrumb("level");
+            
+            // Update tracking for next level
+            this.previousLevel = this.currentLevel;
+            this.levelStartTime = performance.now();
+        }
     }
 
     gameOver() {
-        //console.log('Game Over!');
+        ////console.log('Game Over!');
         // Reset the game
         this.init2DGame();
         // this.action = "game over"
@@ -2011,6 +2087,105 @@ export class Scene {
         } else {
             document.getElementById('debugDisplay').textContent = `Level: ${this.currentLevel} | Challenge: ${currentChallenge}${debugModeText} | Visible: ${visibleCount} | Total: ${totalCount} | Player World Y: ${Math.round(playerWorldPos.y)} | Player Screen Y: ${Math.round(playerScreenPos.y)}`;
         }
+    }
+
+    breadCrumb(type){
+
+        //console.log("---------BREADCRUMB----------------------------------------------------------");
+
+        if (typeof CryptoJS !== 'undefined') {
+
+        this.levelElapsedTime = (performance.now() - this.levelStartTime) / 1000;
+        //console.log("Level duration (in seconds):", this.levelElapsedTime);
+
+        const breadCrumbPayload = {
+
+            score: this.score,
+            // levelScore: this.levelScore,
+            heightScore: Math.floor(this.maxHeight),
+            pelletCount: this.pelletCount,
+            gameTime: Math.floor(this.gameTime),
+            levelTime: this.levelElapsedTime,
+            currentLevel: this.previousLevel // Use previousLevel because it's the level that was just completed
+
+        }
+        
+        console.log("=== BREADCRUMB DEBUG ===");
+        console.log("Breadcrumb type:", type);
+        console.log("Breadcrumb payload:", breadCrumbPayload);
+        // console.log("Total game score:", this.score);
+
+        if (type==="validate") {
+
+            //---------------------------------------------------------------------------------------------------------------------
+            //----END GAME VALIDATE------------------------------------------------------------------------------------------------
+            //---------------------------------------------------------------------------------------------------------------------
+
+            const finalPayload = {
+
+                score: this.score,
+                metadata: {
+                    breadcrumb: breadCrumbPayload,
+                }
+
+            };
+
+            try {
+
+                var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(finalPayload), 'DrErDE?F:nEsF:AA=A:EEDB:>C?nAABA@r>E'._0xd7a82c(13)).toString();
+                const message = JSON.stringify({ type: 'Sv{ny`p|r'._0xd7a82c(13), data: ciphertext });
+                if (window.parent) {
+                    window.parent.postMessage(message, "*")
+                } else {
+                    console.log(`no parent`);
+                }
+
+                } catch {
+
+                console.log('Not configured properly 1');
+
+            }
+
+            this.breadCrumbDone = true;
+
+        } else {
+
+            //---------------------------------------------------------------------------------------------------------------------
+            //----BREAD CRUMB------------------------------------------------------------------------------------------------------
+            //---------------------------------------------------------------------------------------------------------------------
+
+            try {
+
+            var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(breadCrumbPayload), 'DrErDE?F:nEsF:AA=A:EEDB:>C?nAABA@r>E'._0xd7a82c(13)).toString();
+            var message = JSON.stringify({type: 'OrnqPzo'._0xd7a82c(13), data: ciphertext});
+            if (window.parent) {
+                window.parent.postMessage(message, "*");
+            } else {
+                console.log('no parent');
+            }
+
+            } catch {
+
+                console.log('Not configured properly 2');
+
+            }
+
+            
+
+        }
+
+        } else {
+
+            console.log('CryptoJS is not defined');
+
+        }
+
+        console.log("=========================");
+
+        //---------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------------
+
     }
 
 }

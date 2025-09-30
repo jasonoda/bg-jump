@@ -18,7 +18,11 @@ module.exports = {
             patterns: [
                 { from: 'src/images', to: 'src/images' },
                 { from: 'src/sounds', to: 'src/sounds'},
-                { from: 'src/models', to: 'src/models'}
+                { from: 'src/models', to: 'src/models'},
+                { from: 'test-index.html', to: 'test-index.html'},
+                { from: 'createGameData.js', to: 'createGameData.js'},
+                { from: 'validateGameData.js', to: 'validateGameData.js'},
+                { from: 'node_modules/crypto-js/crypto-js.js', to: 'node_modules/crypto-js/crypto-js.js'}
             ]
         }),
         new RunNodeWebpackPlugin({ scriptToRun: './cache-bust.js' })

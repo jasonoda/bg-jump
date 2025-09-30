@@ -10,7 +10,9 @@ module.exports = merge(commonConfig, {
     mode: 'production',
     optimization: {
         minimize: true,
-        minimizer: [new TerserPlugin()],
+        minimizer: [new TerserPlugin({
+            exclude: /node_modules\/crypto-js/,
+        })],
         splitChunks: {
             chunks: 'all',
         },

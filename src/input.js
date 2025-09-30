@@ -34,7 +34,13 @@ export class Input {
   
         } else if (event.key === "q" || event.key === "Q") {
 
-            this.e.scene.gameTime=3;
+            // CHEAT: Bump player up 5 levels (5 * 2000 = 10,000 units)
+            // if(this.e.scene.player && this.e.scene.action === 'game') {
+            //   console.log("🎮 CHEAT ACTIVATED: Jumping up 5 levels!");
+            //   console.log("Old Y:", this.e.scene.player.y);
+            //   this.e.scene.player.y += 10000;
+            //   console.log("New Y:", this.e.scene.player.y);
+            // }
   
           }
   

@@ -59,9 +59,9 @@ export default class Shoot {
     }
 
     shootBall(clickX) {
-        console.log('shootBall called with clickX:', clickX);
-        console.log('Ball pool length:', this.scene.ballPool.length);
-        console.log('Current ball index:', this.scene.currentBallIndex);
+        //console.log('shootBall called with clickX:', clickX);
+        //console.log('Ball pool length:', this.scene.ballPool.length);
+        //console.log('Current ball index:', this.scene.currentBallIndex);
         
         // Find next inactive ball
         let ball = this.scene.ballPool[this.scene.currentBallIndex];
@@ -75,7 +75,7 @@ export default class Shoot {
         
         // If pool is saturated, recycle the current ball
         if (ball && ball.action !== 'inactive') {
-            console.log('Recycling active ball due to pool saturation');
+            //console.log('Recycling active ball due to pool saturation');
             // Force reset and reuse
             ball.action = 'inactive';
         }
@@ -143,29 +143,29 @@ export default class Shoot {
 
     setupShootingControls() {
         document.addEventListener('click', (e) => {
-            console.log('Click detected:', { action: this.scene.action, mobile: this.e.mobile, ballPoolLength: this.scene.ballPool.length });
+            //console.log('Click detected:', { action: this.scene.action, mobile: this.e.mobile, ballPoolLength: this.scene.ballPool.length });
             if (this.scene.action === 'game' && this.e.mobile === false) {
                 const currentTime = Date.now();
                 if (currentTime - this.scene.lastShotTime > this.scene.shotCooldown) {
-                    console.log('Shooting ball from click');
+                    //console.log('Shooting ball from click');
                     this.shootBall(e.clientX);
                     this.scene.lastShotTime = currentTime;
                 } else {
-                    console.log('Shot on cooldown');
+                    //console.log('Shot on cooldown');
                 }
             }
         });
 
         document.addEventListener('touchstart', (e) => {
-            console.log('Touch detected:', { action: this.scene.action, mobile: this.e.mobile, ballPoolLength: this.scene.ballPool.length });
+            //console.log('Touch detected:', { action: this.scene.action, mobile: this.e.mobile, ballPoolLength: this.scene.ballPool.length });
             if (this.scene.action === 'game' && this.e.mobile === true) {
                 const currentTime = Date.now();
                 if (currentTime - this.scene.lastShotTime > this.scene.shotCooldown) {
-                    console.log('Shooting ball from touch');
+                    //console.log('Shooting ball from touch');
                     this.shootBall(e.touches[0].clientX);
                     this.scene.lastShotTime = currentTime;
                 } else {
-                    console.log('Shot on cooldown');
+                    //console.log('Shot on cooldown');
                 }
             }
         });

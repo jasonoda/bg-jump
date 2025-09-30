@@ -40,66 +40,79 @@ function validateGameData(initialGameData, breadcrumbs, finalGameData) {
   console.log("---------------------------------------");
 
   // ---------------------------------------------------------------------------------------------
-  // check score
+  // check for breadcrumb for every level (prevent level skipping cheats)
   // ---------------------------------------------------------------------------------------------
 
-  this.scoreCheck = 0;
-
-  for(var i=0; i<breadcrumbs.length; i++){
-
-    var b = breadcrumbs[i]
-    if(b.levelScore!==undefined){
-         this.scoreCheck+=b.levelScore;
-    }
-   
-  }
-
-  if(this.scoreCheck!==finalGameData.score){
-    
-    reasons.push("SCORE DID NOT ADD UP "+this.scoreCheck+" / "+finalGameData.score);
-    isValid=false;
-
-  }
+  console.log("=== LEVEL SKIP CHECK ===");
+  // Get the final level reached from the last breadcrumb
+  var finalLevel = breadcrumbs[breadcrumbs.length - 1].currentLevel || 0;
+  console.log("Final level reached:", finalLevel);
   
-  // ---------------------------------------------------------------------------------------------
-  // check level times
-  // ---------------------------------------------------------------------------------------------
-
-   for(var i=0; i<breadcrumbs.length; i++){
-
-    if(breadcrumbs[i].levelTime>17.5){
-            
-        reasons.push("OVER TIME LIMIT "+breadcrumbs[i].levelTime);
-        isValid=false;
-
+  // Track which levels have breadcrumbs
+  var levelsWithBreadcrumbs = {};
+  for(var i = 0; i < breadcrumbs.length; i++){
+    if(breadcrumbs[i].currentLevel !== undefined){
+      levelsWithBreadcrumbs[breadcrumbs[i].currentLevel] = true;
     }
-   
   }
-
-  // ---------------------------------------------------------------------------------------------
-  // check game scores
-  // ---------------------------------------------------------------------------------------------
-
-  this.scoreCheck = 0;
-
-  console.log(finalGameData.gameScores.length);
-
-  for(var i=0; i<finalGameData.gameScores.length; i++){
-
-    var b = finalGameData.gameScores[i]
-    if(b!==undefined){
-         this.scoreCheck+=b;
-    }
-
-  }
-
-  if(this.scoreCheck!==finalGameData.score){
-    
-    reasons.push("GAME SCORES DID NOT ADD UP "+this.scoreCheck+" / "+finalGameData.score);
-    isValid=false;
-
-  }
+  console.log("Levels with breadcrumbs:", Object.keys(levelsWithBreadcrumbs).join(', '));
   
+  // Check that every level from 2 to finalLevel has a breadcrumb
+  // (Level 1 doesn't need a breadcrumb since game starts at level 1)
+  for(var level = 2; level <= finalLevel; level++){
+    if(!levelsWithBreadcrumbs[level]){
+      console.log("❌ MISSING breadcrumb for level " + level);
+      reasons.push("MISSING BREADCRUMB FOR LEVEL " + level + " - possible level skip cheat");
+      isValid = false;
+    }
+  }
+  console.log(isValid ? "✅ All levels have breadcrumbs" : "❌ Level skip detected");
+  console.log("========================");
+ 
+  // ---------------------------------------------------------------------------------------------
+  // check coin/pellet count (prevent coin duplication cheats)
+  // ---------------------------------------------------------------------------------------------
+
+  console.log("=== COIN COUNT CHECK ===");
+  // Game has 3 pellets per level for 30 levels = 90 total pellets maximum
+  var MAX_PELLETS = 90;
+  var finalPelletCount = breadcrumbs[breadcrumbs.length - 1].pelletCount || 0;
+  console.log("Coins collected:", finalPelletCount, "/ Max:", MAX_PELLETS);
+  
+  if(finalPelletCount > MAX_PELLETS){
+    console.log("❌ TOO MANY COINS - possible duplication cheat");
+    reasons.push("TOO MANY COINS COLLECTED " + finalPelletCount + " / " + MAX_PELLETS + " - possible coin duplication cheat");
+    isValid = false;
+  } else {
+    console.log("✅ Coin count is valid");
+  }
+  console.log("========================");
+
+  // ---------------------------------------------------------------------------------------------
+  // check final score calculation (height + coins)
+  // ---------------------------------------------------------------------------------------------
+
+  console.log("=== SCORE CALCULATION CHECK ===");
+  // Get values from the last breadcrumb (which is the final breadcrumb)
+  var finalHeightScore = breadcrumbs[breadcrumbs.length - 1].heightScore || 0;
+  var finalCoinScore = finalPelletCount * 25; // Each coin is worth 25 points
+  var calculatedFinalScore = finalHeightScore + finalCoinScore;
+  var reportedFinalScore = finalGameData.score || 0;
+  
+  console.log("Height score:", finalHeightScore);
+  console.log("Coin score:", finalCoinScore, "(", finalPelletCount, "coins × 25)");
+  console.log("Calculated total:", calculatedFinalScore);
+  console.log("Reported total:", reportedFinalScore);
+  
+  if(calculatedFinalScore !== reportedFinalScore){
+    console.log("❌ SCORE MISMATCH - calculated vs reported don't match");
+    reasons.push("SCORE MISMATCH - Calculated: " + calculatedFinalScore + " (height: " + finalHeightScore + " + coins: " + finalCoinScore + ") but reported: " + reportedFinalScore);
+    isValid = false;
+  } else {
+    console.log("✅ Score calculation is valid");
+  }
+  console.log("================================");
+
   // ---------------------------------------------------------------------------------------------
   // check if extra breadcrumbs were added
   // ---------------------------------------------------------------------------------------------

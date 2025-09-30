@@ -1,6 +1,6 @@
 {
   "index": {
-    "js": "index-bundle-23a7342e70862aba0f48.js"
+    "js": "index-bundle-cb7e04796bc00f36b97b.js"
   },
   "": {
     "glb": [
@@ -40,7 +40,12 @@
       "src/images/ref/neg-y.png",
       "src/images/black.png"
     ],
-    "js": "src_starScores_json-bundle-23a7342e70862aba0f48.js",
+    "js": [
+      "validateGameData.js",
+      "src_starScores_json-bundle-cb7e04796bc00f36b97b.js",
+      "createGameData.js",
+      "createGameData.js"
+    ],
     "mp3": [
       "src/sounds/introMusic.mp3",
       "src/sounds/finish.mp3",
@@ -74,6 +79,7 @@
     ],
     "ttf": "661aebe2b21204b02d9e.ttf",
     "html": [
+      "test-index.html",
       "game.html",
       "index.html"
     ],
